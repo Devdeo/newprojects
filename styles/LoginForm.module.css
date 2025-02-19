@@ -1,0 +1,190 @@
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-size: 1.8rem;
+}
+
+.closeButton {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  border: none;
+  background: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.formGroup {
+  margin-bottom: 1.2rem;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: #0070f3;
+}
+
+.forgotPassword {
+  text-align: right;
+  margin-bottom: 1rem;
+}
+
+.forgotPassword a {
+  color: #0070f3;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 0.9rem;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.submitButton:hover {
+  background-color: #0051b3;
+}
+
+.socialLogin {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.socialLogin p {
+  color: #666;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.socialLogin p::before,
+.socialLogin p::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 30%;
+  height: 1px;
+  background-color: #ddd;
+}
+
+.socialLogin p::before {
+  left: 0;
+}
+
+.socialLogin p::after {
+  right: 0;
+}
+
+.socialButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.socialButtons button {
+  padding: 0.8rem 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.googleBtn:hover {
+  background-color: #f1f1f1;
+}
+
+.facebookBtn:hover {
+  background-color: #f1f1f1;
+}
+
+.switchForm {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.switchForm p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.switchButton {
+  background: none;
+  border: none;
+  color: #0070f3;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0 4px;
+  font-size: 0.9rem;
+}
+
+.switchButton:hover {
+  text-decoration: underline;
+}
+
+.termsCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.termsCheckbox input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.termsCheckbox label {
+  color: #666;
+}
+
+.termsCheckbox a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.termsCheckbox a:hover {
+  text-decoration: underline;
+}
