@@ -49,6 +49,13 @@
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.taskForm input[type="file"] {
+  border: none;
+  padding: 8px 0;
 }
 
 .taskFilter {

@@ -1,22 +1,25 @@
+
 import { useState, useEffect } from 'react';
 import styles from '../styles/Dashboard.module.css';
-import { useRouter } from 'next/router'; // Assuming Next.js for routing
-// Placeholder for Firebase Authentication
-const auth = { currentUser: { uid: 'testUser' } }; // Replace with actual Firebase auth
-
-// Placeholder for subscription check function
-const checkSubscription = async (uid) => {
-  // Replace with actual Firebase Firestore logic to fetch subscription status
-  // This example simulates a subscription
-  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-  return { isActive: true, planName: 'Premium' };
-};
-
+import { useRouter } from 'next/router';
+import { auth } from '../firebase/config';
+import { db } from '../firebase/config';
+import { collection, addDoc } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('active-tasks');
   const [subscription, setSubscription] = useState(null);
   const router = useRouter();
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    hours: '',
+    key: '',
+    videoUrl: '',
+  });
+  const [videoFile, setVideoFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const checkUserSubscription = async () => {
@@ -24,34 +27,54 @@ const Dashboard = () => {
         router.push('/');
         return;
       }
-
-      const subStatus = await checkSubscription(auth.currentUser.uid);
-      setSubscription(subStatus);
-
-      if (!subStatus.isActive) {
-        router.push('/#pricing');
-      }
+      // Subscription check logic here
+      setSubscription({ isActive: true });
     };
 
     checkUserSubscription();
   }, []);
 
+  const handleVideoChange = (e) => {
+    if (e.target.files[0]) {
+      setVideoFile(e.target.files[0]);
+    }
+  };
+
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let videoUrl = '';
+      if (videoFile) {
+        const storage = getStorage();
+        const videoRef = ref(storage, `videos/${Date.now()}-${videoFile.name}`);
+        await uploadBytes(videoRef, videoFile);
+        videoUrl = await getDownloadURL(videoRef);
+      }
+
+      const taskData = {
+        ...newTask,
+        videoUrl,
+        status: 'active',
+        createdAt: new Date(),
+        userId: auth.currentUser.uid
+      };
+
+      const docRef = await addDoc(collection(db, 'tasks'), taskData);
+      setTasks([...tasks, { id: docRef.id, ...taskData }]);
+      setNewTask({ title: '', hours: '', key: '', videoUrl: '' });
+      setVideoFile(null);
+    } catch (error) {
+      console.error('Error creating task:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!subscription || !subscription.isActive) {
     return <div>Loading...</div>;
   }
-
-  const [tasks, setTasks] = useState([
-    { id: 1, title: 'Previous Task 1', description: 'This is a completed task', status: 'completed' },
-    { id: 2, title: 'Previous Task 2', description: 'Another completed task', status: 'completed' },
-    { id: 3, title: 'Active Task 1', description: 'This is an active task', status: 'active' }
-  ]);
-  const [newTask, setNewTask] = useState({ title: '', description: '' });
-
-  const handleCreateTask = (e) => {
-    e.preventDefault();
-    setTasks([...tasks, { ...newTask, id: Date.now(), status: 'active' }]);
-    setNewTask({ title: '', description: '' });
-  };
 
   return (
     <div className={styles.dashboard}>
@@ -85,7 +108,7 @@ const Dashboard = () => {
       <div className={styles.content}>
         {activeTab === 'active-tasks' && (
           <div>
-            <h2>Active Tasks</h2>
+            <h2>Create New Task</h2>
             <form onSubmit={handleCreateTask} className={styles.taskForm}>
               <input
                 type="text"
@@ -94,21 +117,44 @@ const Dashboard = () => {
                 onChange={(e) => setNewTask({...newTask, title: e.target.value})}
                 required
               />
-              <textarea
-                placeholder="Task Description"
-                value={newTask.description}
-                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+              <input
+                type="number"
+                placeholder="Hours Required"
+                value={newTask.hours}
+                onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                required
+                min="1"
+              />
+              <input
+                type="text"
+                placeholder="Key"
+                value={newTask.key}
+                onChange={(e) => setNewTask({...newTask, key: e.target.value})}
                 required
               />
-              <button type="submit">Create Task</button>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={handleVideoChange}
+                required
+              />
+              <button type="submit" disabled={loading}>
+                {loading ? 'Creating...' : 'Create Task'}
+              </button>
             </form>
+
             <div className={styles.taskList}>
-              {tasks
-                .filter(task => task.status === 'active')
-                .map(task => (
+              {tasks.map(task => (
                 <div key={task.id} className={styles.taskCard}>
                   <h3>{task.title}</h3>
-                  <p>{task.description}</p>
+                  <p>Hours: {task.hours}</p>
+                  <p>Key: {task.key}</p>
+                  {task.videoUrl && (
+                    <video width="100%" controls>
+                      <source src={task.videoUrl} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  )}
                   <span className={styles.status}>{task.status}</span>
                 </div>
               ))}
@@ -125,7 +171,14 @@ const Dashboard = () => {
                 .map(task => (
                   <div key={task.id} className={styles.taskCard}>
                     <h3>{task.title}</h3>
-                    <p>{task.description}</p>
+                    <p>Hours: {task.hours}</p>
+                    <p>Key: {task.key}</p>
+                    {task.videoUrl && (
+                      <video width="100%" controls>
+                        <source src={task.videoUrl} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
                     <span className={styles.status}>{task.status}</span>
                   </div>
                 ))}
