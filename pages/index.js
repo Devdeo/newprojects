@@ -67,6 +67,58 @@ const Home = () => {
             </div>
           </div>
         </motion.section>
+
+        <motion.section 
+          className={styles.pricing}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9 }}
+        >
+          <h2>Pricing Plans</h2>
+          <div className={styles.pricingGrid}>
+            <PricingCard 
+              title="Basic" 
+              price="29" 
+              features={['1 User', '10GB Storage', 'Basic Support']}
+            />
+            <PricingCard 
+              title="Pro" 
+              price="59" 
+              features={['5 Users', '50GB Storage', 'Priority Support', 'Advanced Features']}
+            />
+            <PricingCard 
+              title="Enterprise" 
+              price="99" 
+              features={['Unlimited Users', '500GB Storage', '24/7 Support', 'Custom Solutions']}
+            />
+          </div>
+        </motion.section>
+
+        <motion.section 
+          className={styles.reviews}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1 }}
+        >
+          <h2>What Our Customers Say</h2>
+          <div className={styles.reviewGrid}>
+            <Review 
+              name="John Doe"
+              review="Amazing service! The platform has transformed how we handle our digital presence."
+              image="/avatar1.jpg"
+            />
+            <Review 
+              name="Sarah Smith"
+              review="Incredible features and outstanding support. Highly recommended!"
+              image="/avatar2.jpg"
+            />
+            <Review 
+              name="Mike Johnson"
+              review="Best decision we made for our business. The ROI has been phenomenal."
+              image="/avatar3.jpg"
+            />
+          </div>
+        </motion.section>
       </main>
 
       <Footer />
