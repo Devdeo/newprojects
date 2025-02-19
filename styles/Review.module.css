@@ -22,3 +22,19 @@
 .name {
   font-weight: bold;
 }
+.review {
+  padding: 1.5rem;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin: 1rem;
+}
+
+.name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.text {
+  color: #666;
+}
