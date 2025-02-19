@@ -20,6 +20,7 @@ const LoginForm = ({ onClose }) => {
       return;
     }
     console.log('Form submitted with:', credentials);
+    window.location.href = '/dashboard';
   };
 
   const handleForgotPassword = (e) => {
