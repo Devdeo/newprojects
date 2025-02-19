@@ -24,6 +24,7 @@ const LoginForm = ({ onClose }) => {
       } else {
         await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
       }
+      onClose(); // Close login modal after success
       router.push('/dashboard');
     } catch (error) {
       setError(error.message);
