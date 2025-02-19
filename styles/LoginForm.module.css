@@ -163,6 +163,27 @@
   text-decoration: underline;
 }
 
+.googleButton {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.googleButton:hover {
+  background-color: #357ae8;
+}
+
+.googleSignIn {
+  margin-top: 15px;
+  width: 100%;
+}
+
 .termsCheckbox {
   display: flex;
   align-items: center;

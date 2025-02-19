@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { auth } from '../firebase/config';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase/config';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import styles from '../styles/LoginForm.module.css';
 
 const LoginForm = ({ onClose }) => {
@@ -24,7 +25,17 @@ const LoginForm = ({ onClose }) => {
       } else {
         await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
       }
-      onClose(); // Close login modal after success
+      onClose();
+      router.push('/dashboard');
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      onClose();
       router.push('/dashboard');
     } catch (error) {
       setError(error.message);
@@ -71,6 +82,11 @@ const LoginForm = ({ onClose }) => {
             {isLogin ? 'Login' : 'Sign Up'}
           </button>
         </form>
+        <div className={styles.googleSignIn}>
+          <button onClick={handleGoogleSignIn} className={styles.googleButton}>
+            Sign in with Google
+          </button>
+        </div>
         <div className={styles.switchForm}>
           <p>
             {isLogin ? "Don't have an account?" : "Already have an account?"}
