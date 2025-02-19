@@ -2,7 +2,8 @@ import { useRouter } from 'next/router';
 import { useState } from 'react';
 import styles from '../styles/PricingCard.module.css';
 import LoginForm from './LoginForm';
-import { auth, createUserSubscription } from '../firebase'; // Import Firebase functions
+import { auth } from '../firebase/config';
+import { createUserSubscription } from '../firebase/firestore'; // Import Firebase functions
 
 const PricingCard = ({ title, price, features }) => {
   const router = useRouter();
