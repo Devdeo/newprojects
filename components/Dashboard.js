@@ -3,10 +3,11 @@ import { useState } from 'react';
 import styles from '../styles/Dashboard.module.css';
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('tasks');
+  const [activeTab, setActiveTab] = useState('active-tasks');
   const [tasks, setTasks] = useState([
     { id: 1, title: 'Previous Task 1', description: 'This is a completed task', status: 'completed' },
-    { id: 2, title: 'Previous Task 2', description: 'Another completed task', status: 'completed' }
+    { id: 2, title: 'Previous Task 2', description: 'Another completed task', status: 'completed' },
+    { id: 3, title: 'Active Task 1', description: 'This is an active task', status: 'active' }
   ]);
   const [newTask, setNewTask] = useState({ title: '', description: '' });
 
@@ -20,10 +21,16 @@ const Dashboard = () => {
     <div className={styles.dashboard}>
       <div className={styles.sidebar}>
         <button 
-          className={activeTab === 'tasks' ? styles.active : ''} 
-          onClick={() => setActiveTab('tasks')}
+          className={activeTab === 'active-tasks' ? styles.active : ''} 
+          onClick={() => setActiveTab('active-tasks')}
         >
-          Tasks
+          Active Tasks
+        </button>
+        <button 
+          className={activeTab === 'previous-tasks' ? styles.active : ''} 
+          onClick={() => setActiveTab('previous-tasks')}
+        >
+          Previous Tasks
         </button>
         <button 
           className={activeTab === 'billing' ? styles.active : ''} 
@@ -40,9 +47,9 @@ const Dashboard = () => {
       </div>
       
       <div className={styles.content}>
-        {activeTab === 'tasks' && (
+        {activeTab === 'active-tasks' && (
           <div>
-            <h2>Tasks</h2>
+            <h2>Active Tasks</h2>
             <form onSubmit={handleCreateTask} className={styles.taskForm}>
               <input
                 type="text"
@@ -59,27 +66,9 @@ const Dashboard = () => {
               />
               <button type="submit">Create Task</button>
             </form>
-            <div className={styles.taskFilter}>
-              <button 
-                className={styles.filterButton} 
-                onClick={() => setActiveTab('active-tasks')}
-              >
-                Active Tasks
-              </button>
-              <button 
-                className={styles.filterButton} 
-                onClick={() => setActiveTab('previous-tasks')}
-              >
-                Previous Tasks
-              </button>
-            </div>
             <div className={styles.taskList}>
               {tasks
-                .filter(task => 
-                  activeTab === 'active-tasks' 
-                    ? task.status === 'active' 
-                    : task.status === 'completed'
-                )
+                .filter(task => task.status === 'active')
                 .map(task => (
                 <div key={task.id} className={styles.taskCard}>
                   <h3>{task.title}</h3>
@@ -87,6 +76,23 @@ const Dashboard = () => {
                   <span className={styles.status}>{task.status}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'previous-tasks' && (
+          <div>
+            <h2>Previous Tasks</h2>
+            <div className={styles.taskList}>
+              {tasks
+                .filter(task => task.status === 'completed')
+                .map(task => (
+                  <div key={task.id} className={styles.taskCard}>
+                    <h3>{task.title}</h3>
+                    <p>{task.description}</p>
+                    <span className={styles.status}>{task.status}</span>
+                  </div>
+                ))}
             </div>
           </div>
         )}
