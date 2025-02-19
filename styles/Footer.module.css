@@ -1,0 +1,22 @@
+
+.footer {
+  padding: 2rem;
+  background-color: #f7f7f7;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+}
+
+.company, .legal, .social {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.icons {
+  display: flex;
+  gap: 1rem;
+}
