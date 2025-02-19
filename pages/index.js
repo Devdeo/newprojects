@@ -4,6 +4,8 @@ import styles from "../styles/Home.module.css";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { motion } from "framer-motion";
+import PricingCard from '../components/PricingCard';
+import Review from '../components/Review';
 
 const Home = () => {
   return (
