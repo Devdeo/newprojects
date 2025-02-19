@@ -4,7 +4,10 @@ import styles from '../styles/Dashboard.module.css';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('tasks');
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState([
+    { id: 1, title: 'Previous Task 1', description: 'This is a completed task', status: 'completed' },
+    { id: 2, title: 'Previous Task 2', description: 'Another completed task', status: 'completed' }
+  ]);
   const [newTask, setNewTask] = useState({ title: '', description: '' });
 
   const handleCreateTask = (e) => {
@@ -56,8 +59,28 @@ const Dashboard = () => {
               />
               <button type="submit">Create Task</button>
             </form>
+            <div className={styles.taskFilter}>
+              <button 
+                className={styles.filterButton} 
+                onClick={() => setActiveTab('active-tasks')}
+              >
+                Active Tasks
+              </button>
+              <button 
+                className={styles.filterButton} 
+                onClick={() => setActiveTab('previous-tasks')}
+              >
+                Previous Tasks
+              </button>
+            </div>
             <div className={styles.taskList}>
-              {tasks.map(task => (
+              {tasks
+                .filter(task => 
+                  activeTab === 'active-tasks' 
+                    ? task.status === 'active' 
+                    : task.status === 'completed'
+                )
+                .map(task => (
                 <div key={task.id} className={styles.taskCard}>
                   <h3>{task.title}</h3>
                   <p>{task.description}</p>
