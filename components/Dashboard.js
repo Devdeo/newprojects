@@ -45,32 +45,51 @@ const Dashboard = () => {
     setLoading(true);
 
     try {
-      let videoUrl = '';
-      if (videoFile) {
-        const storage = getStorage();
-        const videoRef = ref(storage, `videos/${Date.now()}-${videoFile.name}`);
-        await uploadBytes(videoRef, videoFile);
-        videoUrl = await getDownloadURL(videoRef);
+      const formData = new FormData();
+      formData.append('title', newTask.title);
+      formData.append('hours', newTask.hours);
+      formData.append('streamKey', newTask.key);
+      formData.append('userId', auth.currentUser.uid);
+      formData.append('video', videoFile);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create task');
       }
 
-      const taskData = {
-        ...newTask,
-        videoUrl,
-        status: 'active',
-        createdAt: new Date(),
-        userId: auth.currentUser.uid
-      };
-
-      const docRef = await addDoc(collection(db, 'tasks'), taskData);
-      setTasks([...tasks, { id: docRef.id, ...taskData }]);
+      const result = await response.json();
+      setTasks([...tasks, result]);
       setNewTask({ title: '', hours: '', key: '', videoUrl: '' });
       setVideoFile(null);
+      
     } catch (error) {
       console.error('Error creating task:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!auth.currentUser) return;
+      
+      try {
+        const response = await fetch(`/api/tasks?userId=${auth.currentUser.uid}`);
+        if (response.ok) {
+          const data = await response.json();
+          setTasks(data);
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   if (!subscription || !subscription.isActive) {
     return <div>Loading...</div>;
