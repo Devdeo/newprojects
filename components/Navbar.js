@@ -18,7 +18,7 @@ const Navbar = () => {
           <Image src="/replit.svg" alt="Logo" width={32} height={32} />
           <span className={styles.siteName}>My Site</span>
         </div>
-        {window.location.pathname === '/dashboard' ? (
+        {typeof window !== 'undefined' && window.location.pathname === '/dashboard' ? (
           <button className={styles.joinButton} onClick={handleLogout}>
             Logout
           </button>
