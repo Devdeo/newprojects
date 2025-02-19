@@ -1,9 +1,45 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/Dashboard.module.css';
+import { useRouter } from 'next/router'; // Assuming Next.js for routing
+// Placeholder for Firebase Authentication
+const auth = { currentUser: { uid: 'testUser' } }; // Replace with actual Firebase auth
+
+// Placeholder for subscription check function
+const checkSubscription = async (uid) => {
+  // Replace with actual Firebase Firestore logic to fetch subscription status
+  // This example simulates a subscription
+  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+  return { isActive: true, planName: 'Premium' };
+};
+
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('active-tasks');
+  const [subscription, setSubscription] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkUserSubscription = async () => {
+      if (!auth.currentUser) {
+        router.push('/');
+        return;
+      }
+
+      const subStatus = await checkSubscription(auth.currentUser.uid);
+      setSubscription(subStatus);
+
+      if (!subStatus.isActive) {
+        router.push('/#pricing');
+      }
+    };
+
+    checkUserSubscription();
+  }, []);
+
+  if (!subscription || !subscription.isActive) {
+    return <div>Loading...</div>;
+  }
+
   const [tasks, setTasks] = useState([
     { id: 1, title: 'Previous Task 1', description: 'This is a completed task', status: 'completed' },
     { id: 2, title: 'Previous Task 2', description: 'Another completed task', status: 'completed' },
@@ -45,7 +81,7 @@ const Dashboard = () => {
           Account Settings
         </button>
       </div>
-      
+
       <div className={styles.content}>
         {activeTab === 'active-tasks' && (
           <div>
@@ -79,7 +115,7 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'previous-tasks' && (
           <div>
             <h2>Previous Tasks</h2>
@@ -96,14 +132,14 @@ const Dashboard = () => {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'billing' && (
           <div>
             <h2>Billing Information</h2>
             <p>Your billing information and subscription details will appear here.</p>
           </div>
         )}
-        
+
         {activeTab === 'settings' && (
           <div>
             <h2>Account Settings</h2>
