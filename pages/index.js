@@ -29,14 +29,14 @@ const Home = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            Transform Your Digital Presence
+            Loop Your Videos on YouTube Live
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
           >
-            Professional digital services for modern businesses
+            Stream your videos 24/7 with automated looping system
           </motion.p>
           <motion.button 
             className={styles.cta}
@@ -55,16 +55,16 @@ const Home = () => {
         >
           <div className={styles.featureGrid}>
             <div className={styles.featureCard}>
-              <h3>Fast & Reliable</h3>
-              <p>Lightning-fast performance that keeps your business running smoothly</p>
+              <h3>24/7 Streaming</h3>
+              <p>Keep your content streaming continuously without interruption</p>
             </div>
             <div className={styles.featureCard}>
-              <h3>Secure</h3>
-              <p>Enterprise-grade security to protect your valuable data</p>
+              <h3>Easy Setup</h3>
+              <p>Simply upload your video and enter your YouTube stream key</p>
             </div>
             <div className={styles.featureCard}>
-              <h3>Scalable</h3>
-              <p>Grows with your business, from startup to enterprise</p>
+              <h3>Reliable</h3>
+              <p>Automated system ensures your stream stays live</p>
             </div>
           </div>
         </motion.section>
@@ -104,18 +104,18 @@ const Home = () => {
           <h2>What Our Customers Say</h2>
           <div className={styles.reviewGrid}>
             <Review 
-              name="John Doe"
-              review="Amazing service! The platform has transformed how we handle our digital presence."
+              name="Alex Chen"
+              review="Perfect for my 24/7 music channel! Keeps my content streaming non-stop."
               image="/avatar1.jpg"
             />
             <Review 
-              name="Sarah Smith"
-              review="Incredible features and outstanding support. Highly recommended!"
+              name="Maria Garcia"
+              review="Super easy to set up and maintain my meditation livestream!"
               image="/avatar2.jpg"
             />
             <Review 
-              name="Mike Johnson"
-              review="Best decision we made for our business. The ROI has been phenomenal."
+              name="James Wilson"
+              review="Great for educational content. My tutorials run smoothly 24/7."
               image="/avatar3.jpg"
             />
           </div>
