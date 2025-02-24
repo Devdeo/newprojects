@@ -2,12 +2,14 @@ import { useState } from 'react';
 import Image from 'next/image';
 import styles from '../styles/Navbar.module.css';
 import LoginForm from './LoginForm';
+import {auth} from '../firebase/config';
+import {signOut} from "firebase/auth";
+
 
 const Navbar = () => {
   const [showLogin, setShowLogin] = useState(false);
   const handleLogout = () => {
-    // Add your logout logic here.  For example:
-    // localStorage.removeItem('userToken');
+    signOut(auth)
     // router.push('/');
   };
 
