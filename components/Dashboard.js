@@ -34,28 +34,9 @@ const Dashboard = () => {
     checkUserSubscription();
   }, []);
 
-  const initGoogleDriveAuth = async () => {
-    try {
-      const response = await fetch('/api/gdrive/auth');
-      const data = await response.json();
-      
-      if (data.error) {
-        console.error('Auth error:', data.error);
-        return;
-      }
-      
-      if (data.authUrl) {
-        window.location.assign(data.authUrl);
-      }
-    } catch (error) {
-      console.error('Error initializing Google Drive auth:', error);
-    }
-  };
-
-  const handleVideoChange = async (e) => {
+  const handleVideoChange = (e) => {
     if (e.target.files[0]) {
       setVideoFile(e.target.files[0]);
-      await initGoogleDriveAuth();
     }
   };
 
