@@ -10,12 +10,14 @@ const oauth2Client = new google.auth.OAuth2(
 export default function handler(req, res) {
   const scopes = [
     'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/userinfo.profile'
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email'
   ];
 
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
+    include_granted_scopes: true,
     prompt: 'consent'
   });
 

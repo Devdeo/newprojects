@@ -14,10 +14,8 @@ export default async function handler(req, res) {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
 
-    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    // Store tokens securely here if needed
     
-    // Store tokens in session or database
-    // Redirect back to dashboard
     res.redirect('/dashboard?auth=success');
   } catch (error) {
     console.error('Error:', error);
