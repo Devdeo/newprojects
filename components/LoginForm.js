@@ -1,8 +1,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { auth, googleProvider } from '../firebase/config';
+import { auth, googleProvider, db } from '../firebase/config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import styles from '../styles/LoginForm.module.css';
 
 const LoginForm = ({ onClose }) => {
@@ -15,6 +16,19 @@ const LoginForm = ({ onClose }) => {
   });
   const [error, setError] = useState('');
 
+  const saveUserData = async (user, additionalData = {}) => {
+    try {
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        name: additionalData.name || user.displayName || '',
+        createdAt: new Date().toISOString(),
+        ...additionalData
+      });
+    } catch (error) {
+      console.error('Error saving user data:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -23,7 +37,8 @@ const LoginForm = ({ onClose }) => {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
       } else {
-        await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+        const { user } = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+        await saveUserData(user, { name: credentials.name });
       }
       onClose();
       router.push('/dashboard');
@@ -34,7 +49,8 @@ const LoginForm = ({ onClose }) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await saveUserData(result.user);
       onClose();
       router.push('/dashboard');
     } catch (error) {
