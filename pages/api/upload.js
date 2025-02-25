@@ -1,4 +1,3 @@
-
 import { exec } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -17,29 +16,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const form = new formidable.IncomingForm();
-    const [fields, files] = await new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        resolve([fields, files]);
-      });
-    });
-
-    const { title, hours, streamKey } = fields;
-    const video = files.video;
-
-    if (!video || !streamKey) {
-      return res.status(400).json({ error: 'Video file and stream key are required' });
-    }
+    const form = formidable({});
+    const [fields, files] = await form.parse(req);
+    const video = files.video[0];
+    const streamKey = fields.streamKey[0];
+    const title = fields.title[0];
+    const hours = fields.hours[0];
 
     // Create a temporary file for streaming
     const tempOutput = join(tmpdir(), `stream-${Date.now()}.mp4`);
-    
+
     // Copy video to temp location and start streaming
     await fs.copyFile(video.filepath, tempOutput);
-    
+
     const rtmpUrl = `rtmp://a.rtmp.youtube.com/live2/${streamKey}`;
-    
+
     // Start FFmpeg process for streaming
     const ffmpegProcess = exec(
       `ffmpeg -re -stream_loop -1 -i "${tempOutput}" ` +
@@ -73,44 +64,5 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Upload error:', error);
     return res.status(500).json({ error: 'Failed to process upload' });
-  }
-}
-import { join } from 'path';
-import { promises as fs } from 'fs';
-import formidable from 'formidable';
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const form = formidable({});
-    const [fields, files] = await form.parse(req);
-    
-    // Here you would typically handle the file upload to your storage
-    // For now, we'll just return a mock response
-    const mockVideoUrl = 'https://example.com/video.mp4';
-
-    const task = {
-      id: Date.now().toString(),
-      title: fields.title[0],
-      hours: fields.hours[0],
-      streamKey: fields.streamKey[0],
-      userId: fields.userId[0],
-      videoUrl: mockVideoUrl,
-      status: 'pending'
-    };
-
-    return res.status(200).json(task);
-  } catch (error) {
-    console.error('Upload error:', error);
-    return res.status(500).json({ error: 'Error processing upload' });
   }
 }
