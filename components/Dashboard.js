@@ -219,6 +219,7 @@ const Dashboard = () => {
                     </video>
                   )}
                   <span className={styles.status}>{task.status}</span>
+                  <p className={styles.timestamp}>Created: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</p>
                 </div>
               ))}
             </div>
@@ -243,6 +244,7 @@ const Dashboard = () => {
                       </video>
                     )}
                     <span className={styles.status}>{task.status}</span>
+                    <p className={styles.timestamp}>Created: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</p>
                   </div>
                 ))}
             </div>
