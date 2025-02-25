@@ -145,6 +145,12 @@ const Dashboard = () => {
           <div className={styles.statItem}>
             <h3>Credit Balance</h3>
             <p>{creditBalance} credits</p>
+            <button 
+              className={styles.addCreditButton}
+              onClick={() => router.push('/pricing')}
+            >
+              Add Credits
+            </button>
           </div>
         </div>
         {activeTab === 'active-tasks' && (

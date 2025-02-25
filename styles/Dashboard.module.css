@@ -31,6 +31,22 @@
   color: #333;
 }
 
+.addCreditButton {
+  margin-top: 12px;
+  padding: 8px 16px;
+  background: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.addCreditButton:hover {
+  background: #0051a8;
+}
+
 .sidebar {
   width: 240px;
   background: white;
