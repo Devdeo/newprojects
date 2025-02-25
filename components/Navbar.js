@@ -2,14 +2,14 @@ import { useState } from 'react';
 import Image from 'next/image';
 import styles from '../styles/Navbar.module.css';
 import LoginForm from './LoginForm';
-import {auth} from '../firebase/config';
-import {signOut} from "firebase/auth";
+import {auth, signout} from '../firebase/config';
+
 
 
 const Navbar = () => {
   const [showLogin, setShowLogin] = useState(false);
   const handleLogout = () => {
-    signOut(auth)
+    signout();
     // router.push('/');
   };
 
