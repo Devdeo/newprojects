@@ -10,6 +10,11 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('active-tasks');
   const [subscription, setSubscription] = useState(null);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [usageStats, setUsageStats] = useState({
+    remainingFileSize: '250MB',
+    remainingTime: '1 hour'
+  });
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({
@@ -22,16 +27,34 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const checkUserSubscription = async () => {
+    const fetchUserData = async () => {
       if (!auth.currentUser) {
         router.push('/');
         return;
       }
-      // Subscription check logic here
-      setSubscription({ isActive: true });
+      
+      try {
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        const docSnap = await getDoc(userRef);
+        
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          setCreditBalance(userData.creditBalance || 0);
+          setSubscription({ isActive: true });
+          
+          // Calculate remaining time and file size based on user's plan
+          const isFree = userData.creditBalance === 0;
+          setUsageStats({
+            remainingFileSize: isFree ? '50MB' : '250MB',
+            remainingTime: isFree ? '10 minutes' : '1 hour'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
     };
 
-    checkUserSubscription();
+    fetchUserData();
   }, []);
 
   const handleVideoChange = (e) => {
@@ -142,6 +165,20 @@ const Dashboard = () => {
       </div>
 
       <div className={styles.content}>
+        <div className={styles.statsBar}>
+          <div className={styles.statItem}>
+            <h3>Credit Balance</h3>
+            <p>{creditBalance} credits</p>
+          </div>
+          <div className={styles.statItem}>
+            <h3>File Size Limit</h3>
+            <p>{usageStats.remainingFileSize}</p>
+          </div>
+          <div className={styles.statItem}>
+            <h3>Processing Time</h3>
+            <p>{usageStats.remainingTime}</p>
+          </div>
+        </div>
         {activeTab === 'active-tasks' && (
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Create New Task</h2>
