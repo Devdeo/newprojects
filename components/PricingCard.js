@@ -32,7 +32,9 @@ const PricingCard = ({ title, price, features }) => {
   return (
     <div className={styles.card}>
       <h3>{title}</h3>
-      <div className={styles.price}>${price}/mo</div>
+      <div className={styles.price}>
+        ${price}{title === "Free" ? "" : "/credit"}
+      </div>
       <ul>
         {features.map((feature, index) => (
           <li key={index}>{feature}</li>
