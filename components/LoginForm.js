@@ -56,12 +56,18 @@ const LoginForm = ({ onClose }) => {
 
   const handleGoogleSignIn = async () => {
     try {
+      googleProvider.setCustomParameters({
+        prompt: 'select_account',
+        display: 'popup'
+      });
       const result = await signInWithPopup(auth, googleProvider);
       await saveUserData(result.user, { authProvider: 'google' });
       onClose();
       router.push('/dashboard');
     } catch (error) {
-      setError(error.message);
+      if (error.code !== 'auth/popup-closed-by-user') {
+        setError(error.message);
+      }
     }
   };
 
