@@ -127,7 +127,7 @@ const Dashboard = () => {
       <div className={styles.content}>
         {activeTab === 'active-tasks' && (
           <div>
-            <h2>Create New Task</h2>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Create New Task</h2>
             <form onSubmit={handleCreateTask} className={styles.taskForm}>
               <input
                 type="text"
