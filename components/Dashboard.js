@@ -147,7 +147,7 @@ const Dashboard = () => {
             <p>{creditBalance} credits</p>
             <button 
               className={styles.addCreditButton}
-              onClick={() => router.push('/pricing')}
+              onClick={() => router.push('/pricing#credit')}
             >
               Add Credits
             </button>
