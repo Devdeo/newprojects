@@ -3,7 +3,7 @@ import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth } from '../firebase/config';
 import { db } from '../firebase/config';
-import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Dashboard = () => {
