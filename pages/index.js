@@ -70,16 +70,25 @@ const Home = () => {
         >
           <h2>Pricing Plans</h2>
           <div className={styles.pricingGrid}>
-            <PricingCard 
-              title="Free" 
-              price="0" 
-              features={['10 Minutes Processing', '50MB File Size', 'Basic Support']}
-            />
-            <PricingCard 
-              title="Credit" 
-              price="2" 
-              features={['1 Hour Processing', '250MB File Size', 'Priority Support', 'Per Credit']}
-            />
+            <div className={styles.pricingCard}>
+              <h3>Free</h3>
+              <div className={styles.price}>$0</div>
+              <ul>
+                <li>10 Minutes Processing</li>
+                <li>50MB File Size</li>
+                <li>Basic Support</li>
+              </ul>
+            </div>
+            <div className={styles.pricingCard}>
+              <h3>Credit</h3>
+              <div className={styles.price}>$2/credit</div>
+              <ul>
+                <li>1 Hour Processing</li>
+                <li>250MB File Size</li>
+                <li>Priority Support</li>
+                <li>Per Credit</li>
+              </ul>
+            </div>
           </div>
         </motion.section>
 
