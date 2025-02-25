@@ -75,3 +75,42 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to process upload' });
   }
 }
+import { join } from 'path';
+import { promises as fs } from 'fs';
+import formidable from 'formidable';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const form = formidable({});
+    const [fields, files] = await form.parse(req);
+    
+    // Here you would typically handle the file upload to your storage
+    // For now, we'll just return a mock response
+    const mockVideoUrl = 'https://example.com/video.mp4';
+
+    const task = {
+      id: Date.now().toString(),
+      title: fields.title[0],
+      hours: fields.hours[0],
+      streamKey: fields.streamKey[0],
+      userId: fields.userId[0],
+      videoUrl: mockVideoUrl,
+      status: 'pending'
+    };
+
+    return res.status(200).json(task);
+  } catch (error) {
+    console.error('Upload error:', error);
+    return res.status(500).json({ error: 'Error processing upload' });
+  }
+}
