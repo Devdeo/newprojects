@@ -38,13 +38,6 @@ const Home = () => {
           >
             Stream your videos 24/7 with automated looping system
           </motion.p>
-          <motion.button 
-            className={styles.cta}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Get Started
-          </motion.button>
         </motion.section>
 
         <motion.section 
