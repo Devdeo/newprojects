@@ -1,5 +1,6 @@
+
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider , signOut} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signOut } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -17,8 +18,8 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
-const singout=()=>{
-  signOut(auth)
-  // router.push('/');
-}
-export default singout();
+const signOutUser = () => {
+  return signOut(auth);
+};
+
+export default signOutUser;

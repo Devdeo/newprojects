@@ -2,15 +2,20 @@ import { useState } from 'react';
 import Image from 'next/image';
 import styles from '../styles/Navbar.module.css';
 import LoginForm from './LoginForm';
-import {auth, signout} from '../firebase/config';
+import signOutUser from '../firebase/config';
+import { auth } from '../firebase/config';
 
 
 
 const Navbar = () => {
   const [showLogin, setShowLogin] = useState(false);
-  const handleLogout = () => {
-    signout();
-    // router.push('/');
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
