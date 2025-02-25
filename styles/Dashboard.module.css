@@ -152,3 +152,34 @@
   width: 100%;
   background: #f1f5f9;
 }
+
+.uploadStatus {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #0070f3;
+  transition: width 0.3s ease;
+}
+
+.successMessage {
+  color: #059669;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-weight: 500;
+  margin-top: 8px;
+}

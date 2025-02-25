@@ -40,9 +40,14 @@ const Dashboard = () => {
     }
   };
 
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setUploadStatus('uploading');
+    setUploadProgress(0);
 
     try {
       const formData = new FormData();
@@ -62,14 +67,26 @@ const Dashboard = () => {
       }
 
       const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
       setTasks([...tasks, result]);
       setNewTask({ title: '', hours: '', key: '', videoUrl: '' });
       setVideoFile(null);
+      setUploadStatus('success');
+      setUploadProgress(100);
       
     } catch (error) {
       console.error('Error creating task:', error);
+      setUploadStatus('error');
+      setUploadProgress(0);
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        setUploadStatus('');
+        setUploadProgress(0);
+      }, 3000);
     }
   };
 
@@ -160,6 +177,28 @@ const Dashboard = () => {
               <button type="submit" disabled={loading}>
                 {loading ? 'Creating...' : 'Create Task'}
               </button>
+              {uploadStatus && (
+                <div className={styles.uploadStatus}>
+                  {uploadStatus === 'uploading' && (
+                    <div className={styles.progressBar}>
+                      <div 
+                        className={styles.progressFill} 
+                        style={{width: `${uploadProgress}%`}}
+                      ></div>
+                    </div>
+                  )}
+                  {uploadStatus === 'success' && (
+                    <div className={styles.successMessage}>
+                      Stream started successfully!
+                    </div>
+                  )}
+                  {uploadStatus === 'error' && (
+                    <div className={styles.errorMessage}>
+                      Failed to start stream. Please try again.
+                    </div>
+                  )}
+                </div>
+              )}
             </form>
 
             <div className={styles.taskList}>
