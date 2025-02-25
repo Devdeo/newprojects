@@ -30,7 +30,8 @@ export default async function handler(req, res) {
     
     return res.redirect(redirectUrl.toString());
   } catch (error) {
-    console.error('OAuth error:', error);
-    return res.redirect('/dashboard?error=auth_failed');
+    console.error('OAuth error:', error.message, error.stack);
+    const errorMessage = encodeURIComponent(error.message || 'Authentication failed');
+    return res.redirect(`/dashboard?error=${errorMessage}`);
   }
 }

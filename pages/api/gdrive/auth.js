@@ -11,9 +11,16 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 export default function handler(req, res) {
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !baseUrl) {
-    return res.status(500).json({ error: 'Missing required environment variables' });
-  }
+  try {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !baseUrl) {
+      return res.status(500).json({ error: 'Missing required environment variables' });
+    }
+    
+    // Validate origin
+    const origin = req.headers.origin || baseUrl;
+    if (!origin) {
+      return res.status(400).json({ error: 'Invalid origin' });
+    }
 
   const scopes = [
     'https://www.googleapis.com/auth/drive.file',
