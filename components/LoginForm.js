@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, googleProvider, db } from '../firebase/config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import styles from '../styles/LoginForm.module.css';
 
 const LoginForm = ({ onClose }) => {
@@ -18,14 +18,19 @@ const LoginForm = ({ onClose }) => {
 
   const saveUserData = async (user, additionalData = {}) => {
     try {
-      await setDoc(doc(db, 'users', user.uid), {
-        email: user.email,
-        name: additionalData.name || user.displayName || '',
-        authProvider: additionalData.authProvider || 'email',
-        creditBalance: 0,
-        createdAt: new Date().toISOString(),
-        ...additionalData
-      });
+      const userRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(userRef);
+      
+      if (!docSnap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          name: additionalData.name || user.displayName || '',
+          authProvider: additionalData.authProvider || 'email',
+          creditBalance: 0,
+          createdAt: new Date().toISOString(),
+          ...additionalData
+        });
+      }
     } catch (error) {
       console.error('Error saving user data:', error);
     }
