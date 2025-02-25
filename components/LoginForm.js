@@ -12,6 +12,7 @@ const LoginForm = ({ onClose }) => {
   const [credentials, setCredentials] = useState({ 
     email: '', 
     password: '',
+    confirmPassword: '',
     name: ''
   });
   const [error, setError] = useState('');
@@ -41,6 +42,10 @@ const LoginForm = ({ onClose }) => {
     setError('');
 
     try {
+      if (!isLogin && credentials.password !== credentials.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
       if (isLogin) {
         await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
       } else {
@@ -107,6 +112,17 @@ const LoginForm = ({ onClose }) => {
               required
             />
           </div>
+          {!isLogin && (
+            <div className={styles.formGroup}>
+              <input
+                type="password"
+                placeholder="Confirm Password"
+                value={credentials.confirmPassword}
+                onChange={(e) => setCredentials({...credentials, confirmPassword: e.target.value})}
+                required
+              />
+            </div>
+          )}
           <button type="submit" className={styles.submitButton}>
             {isLogin ? 'Login' : 'Sign Up'}
           </button>
