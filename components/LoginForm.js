@@ -70,9 +70,7 @@ const LoginForm = ({ onClose }) => {
       onClose();
       router.push('/dashboard');
     } catch (error) {
-      if (error.code !== 'auth/popup-closed-by-user') {
-        setError(error.message);
-      }
+      console.log(error)
     }
   };
 
