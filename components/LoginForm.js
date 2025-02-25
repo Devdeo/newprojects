@@ -61,10 +61,7 @@ const LoginForm = ({ onClose }) => {
 
   const handleGoogleSignIn = async () => {
     try {
-      googleProvider.setCustomParameters({
-        prompt: 'select_account',
-        display: 'popup'
-      });
+      
       const result = await signInWithPopup(auth, googleProvider);
       await saveUserData(result.user, { authProvider: 'google' });
       onClose();
