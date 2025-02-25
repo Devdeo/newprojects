@@ -21,6 +21,8 @@ const LoginForm = ({ onClose }) => {
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
         name: additionalData.name || user.displayName || '',
+        authProvider: additionalData.authProvider || 'email',
+        creditBalance: 0,
         createdAt: new Date().toISOString(),
         ...additionalData
       });
@@ -50,7 +52,7 @@ const LoginForm = ({ onClose }) => {
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      await saveUserData(result.user);
+      await saveUserData(result.user, { authProvider: 'google' });
       onClose();
       router.push('/dashboard');
     } catch (error) {
