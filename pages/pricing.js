@@ -21,19 +21,14 @@ const PricingPage = () => {
         <h2>Pricing Plans</h2>
         <div className={styles.pricingGrid}>
           <PricingCard 
-            title="Basic" 
-            price="29" 
-            features={['1 User', '10GB Storage', 'Basic Support']}
+            title="Free" 
+            price="0" 
+            features={['10 Minutes Processing', '50MB File Size', 'Basic Support']}
           />
           <PricingCard 
-            title="Pro" 
-            price="59" 
-            features={['5 Users', '50GB Storage', 'Priority Support', 'Advanced Features']}
-          />
-          <PricingCard 
-            title="Enterprise" 
-            price="99" 
-            features={['Unlimited Users', '500GB Storage', '24/7 Support', 'Custom Solutions']}
+            title="Credit" 
+            price="2" 
+            features={['1 Hour Processing', '250MB File Size', 'Priority Support', 'Per Credit']}
           />
         </div>
       </motion.section>
