@@ -37,8 +37,16 @@ const Dashboard = () => {
   const initGoogleDriveAuth = async () => {
     try {
       const response = await fetch('/api/gdrive/auth');
-      const { authUrl } = await response.json();
-      window.location.href = authUrl;
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('Auth error:', data.error);
+        return;
+      }
+      
+      if (data.authUrl) {
+        window.location.assign(data.authUrl);
+      }
     } catch (error) {
       console.error('Error initializing Google Drive auth:', error);
     }

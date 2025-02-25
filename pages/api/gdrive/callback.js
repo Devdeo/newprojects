@@ -16,13 +16,21 @@ export default async function handler(req, res) {
 
   const { code } = req.query;
   
+  if (!code) {
+    return res.redirect('/dashboard?error=no_code');
+  }
+
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
+
+    // Store tokens in session or cookies if needed
+    const redirectUrl = new URL('/dashboard', baseUrl);
+    redirectUrl.searchParams.set('auth', 'success');
     
-    res.redirect('/dashboard?auth=success');
+    return res.redirect(redirectUrl.toString());
   } catch (error) {
-    console.error('Error:', error);
-    res.redirect('/dashboard?auth=error');
+    console.error('OAuth error:', error);
+    return res.redirect('/dashboard?error=auth_failed');
   }
 }
