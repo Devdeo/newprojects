@@ -1,20 +1,14 @@
-
 import { useState, useEffect } from 'react';
 import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth } from '../firebase/config';
 import { db } from '../firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('active-tasks');
-  const [subscription, setSubscription] = useState(null);
   const [creditBalance, setCreditBalance] = useState(0);
-  const [usageStats, setUsageStats] = useState({
-    remainingFileSize: '250MB',
-    remainingTime: '1 hour'
-  });
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState({
@@ -32,22 +26,14 @@ const Dashboard = () => {
         router.push('/');
         return;
       }
-      
+
       try {
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const docSnap = await getDoc(userRef);
-        
+
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setCreditBalance(userData.creditBalance || 0);
-          setSubscription({ isActive: true });
-          
-          // Calculate remaining time and file size based on user's plan
-          const isFree = userData.creditBalance === 0;
-          setUsageStats({
-            remainingFileSize: isFree ? '50MB' : '250MB',
-            remainingTime: isFree ? '10 minutes' : '1 hour'
-          });
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -99,7 +85,7 @@ const Dashboard = () => {
       setVideoFile(null);
       setUploadStatus('success');
       setUploadProgress(100);
-      
+
     } catch (error) {
       console.error('Error creating task:', error);
       setUploadStatus('error');
@@ -116,7 +102,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       if (!auth.currentUser) return;
-      
+
       try {
         const response = await fetch(`/api/tasks?userId=${auth.currentUser.uid}`);
         if (response.ok) {
@@ -130,10 +116,6 @@ const Dashboard = () => {
 
     fetchTasks();
   }, []);
-
-  if (!subscription || !subscription.isActive) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className={styles.dashboard}>
@@ -151,12 +133,6 @@ const Dashboard = () => {
           Previous Tasks
         </button>
         <button 
-          className={activeTab === 'billing' ? styles.active : ''} 
-          onClick={() => setActiveTab('billing')}
-        >
-          Billing
-        </button>
-        <button 
           className={activeTab === 'settings' ? styles.active : ''} 
           onClick={() => setActiveTab('settings')}
         >
@@ -169,14 +145,6 @@ const Dashboard = () => {
           <div className={styles.statItem}>
             <h3>Credit Balance</h3>
             <p>{creditBalance} credits</p>
-          </div>
-          <div className={styles.statItem}>
-            <h3>File Size Limit</h3>
-            <p>{usageStats.remainingFileSize}</p>
-          </div>
-          <div className={styles.statItem}>
-            <h3>Processing Time</h3>
-            <p>{usageStats.remainingTime}</p>
           </div>
         </div>
         {activeTab === 'active-tasks' && (
@@ -278,13 +246,6 @@ const Dashboard = () => {
                   </div>
                 ))}
             </div>
-          </div>
-        )}
-
-        {activeTab === 'billing' && (
-          <div>
-            <h2>Billing Information</h2>
-            <p>Your billing information and subscription details will appear here.</p>
           </div>
         )}
 
