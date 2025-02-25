@@ -1,3 +1,4 @@
+
 import { exec } from 'child_process';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -11,50 +12,66 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   try {
     const form = new formidable.IncomingForm();
     const [fields, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
-        err ? reject(err) : resolve([fields, files]);
+        if (err) reject(err);
+        resolve([fields, files]);
       });
     });
 
-    const { title, streamKey } = fields;
+    const { title, hours, streamKey } = fields;
     const video = files.video;
 
-    // Validation
-    if (!title || !streamKey || !video) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!video || !streamKey) {
+      return res.status(400).json({ error: 'Video file and stream key are required' });
     }
 
-    if (!streamKey.match(/^[a-zA-Z0-9_-]{4,}$/)) {
-      return res.status(400).json({ error: 'Invalid stream key format' });
-    }
-
-    // Process video file
-    const tempOutput = join(tmpdir(), `loop-${Date.now()}.mp4`);
-    await new Promise((resolve, reject) => {
-      exec(`ffmpeg -stream_loop -1 -i "${video.filepath}" -c copy "${tempOutput}"`, 
-        (error) => error ? reject(error) : resolve());
-    });
-
-    // Start streaming
+    // Create a temporary file for streaming
+    const tempOutput = join(tmpdir(), `stream-${Date.now()}.mp4`);
+    
+    // Copy video to temp location and start streaming
+    await fs.copyFile(video.filepath, tempOutput);
+    
     const rtmpUrl = `rtmp://a.rtmp.youtube.com/live2/${streamKey}`;
+    
+    // Start FFmpeg process for streaming
     const ffmpegProcess = exec(
       `ffmpeg -re -stream_loop -1 -i "${tempOutput}" ` +
-      `-c:v libx264 -preset veryfast -maxrate 3000k -bufsize 6000k ` +
-      `-pix_fmt yuv420p -g 50 -c:a aac -b:a 160k -ac 2 -ar 44100 ` +
-      `-f flv "${rtmpUrl}"`
+      `-c:v libx264 -preset ultrafast -b:v 3000k ` +
+      `-maxrate 3000k -bufsize 6000k ` +
+      `-pix_fmt yuv420p -g 50 -c:a aac -b:a 160k ` +
+      `-ac 2 -ar 44100 -f flv "${rtmpUrl}"`,
+      (error) => {
+        if (error) {
+          console.error('FFmpeg error:', error);
+        }
+      }
     );
 
-    // Cleanup
+    // Cleanup temp file when streaming ends
     ffmpegProcess.on('exit', () => {
       fs.unlink(tempOutput).catch(console.error);
     });
 
-    res.status(200).json({ message: 'Streaming started successfully' });
+    // Create task record
+    const task = {
+      id: Date.now().toString(),
+      title,
+      hours,
+      key: streamKey,
+      status: 'active',
+      videoUrl: tempOutput
+    };
+
+    return res.status(200).json(task);
   } catch (error) {
-    console.error('Stream error:', error);
-    res.status(500).json({ error: 'Streaming failed' });
+    console.error('Upload error:', error);
+    return res.status(500).json({ error: 'Failed to process upload' });
   }
 }
