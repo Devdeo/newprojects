@@ -125,16 +125,19 @@ const Home = () => {
               name="Alex Chen"
               review="Perfect for my 24/7 music channel! Keeps my content streaming non-stop."
               image="/avatar1.jpg"
+              rating={5}
             />
             <Review 
               name="Maria Garcia"
               review="Super easy to set up and maintain my meditation livestream!"
               image="/avatar2.jpg"
+              rating={4}
             />
             <Review 
               name="James Wilson"
               review="Great for educational content. My tutorials run smoothly 24/7."
               image="/avatar3.jpg"
+              rating={5}
             />
           </div>
         </motion.section>
