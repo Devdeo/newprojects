@@ -73,7 +73,7 @@ const PricingCard = ({ title, price, features }) => {
             <span className={styles.quantity}>{quantity}</span>
             <button onClick={() => setQuantity(quantity + 1)} className={styles.quantityButton}>+</button>
           </div>
-          <button onClick={handleBuyCredits} className={styles.button}>
+          <button onClick={handleBuyCredits} className={`${styles.button} ${styles.payButton}`}>
             Buy {quantity} Credit{quantity > 1 ? 's' : ''}
           </button>
         </div>
