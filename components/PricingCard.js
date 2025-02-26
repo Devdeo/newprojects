@@ -25,15 +25,18 @@ const PricingCard = ({ title, price, features }) => {
       return;
     }
 
-    try {
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 30);
-
-      await createUserSubscription(auth.currentUser.uid, title, expiryDate);
+    if (title === "Credit") {
       router.push('/dashboard');
-    } catch (error) {
-      console.error('Error purchasing plan:', error);
-      alert('Failed to process purchase. Please try again.');
+    } else {
+      try {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        await createUserSubscription(auth.currentUser.uid, title, expiryDate);
+        router.push('/dashboard');
+      } catch (error) {
+        console.error('Error purchasing plan:', error);
+        alert('Failed to process purchase. Please try again.');
+      }
     }
   };
 
