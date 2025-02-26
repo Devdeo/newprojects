@@ -11,6 +11,7 @@ const Dashboard = () => {
   const [creditBalance, setCreditBalance] = useState(0);
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [newTask, setNewTask] = useState({
     title: '',
     hours: '',
@@ -28,6 +29,7 @@ const Dashboard = () => {
       }
 
       try {
+        setIsLoading(true);
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const docSnap = await getDoc(userRef);
 
@@ -37,6 +39,8 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
+      } finally {
+        setTimeout(() => setIsLoading(false), 1000);
       }
     };
 
@@ -141,18 +145,41 @@ const Dashboard = () => {
       </div>
 
       <div className={styles.content}>
-        <div className={styles.statsBar}>
-          <div className={styles.statItem}>
-            <h3>Credit Balance</h3>
-            <p>{creditBalance} credits</p>
-            <button 
-              className={styles.addCreditButton}
-              onClick={() => router.push('/pricing#credit')}
-            >
-              Add Credits
-            </button>
-          </div>
-        </div>
+        {isLoading ? (
+          <>
+            <div className={styles.skeletonStatsBar}>
+              <div className={styles.skeletonStatItem}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonNumber}></div>
+                <div className={styles.skeletonButton}></div>
+              </div>
+            </div>
+            <div className={styles.skeletonTasks}>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={styles.skeletonTaskCard}>
+                  <div className={styles.skeletonTitle}></div>
+                  <div className={styles.skeletonText}></div>
+                  <div className={styles.skeletonText}></div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={styles.statsBar}>
+              <div className={styles.statItem}>
+                <h3>Credit Balance</h3>
+                <p>{creditBalance} credits</p>
+                <button 
+                  className={styles.addCreditButton}
+                  onClick={() => router.push('/pricing#credit')}
+                >
+                  Add Credits
+                </button>
+              </div>
+            </div>
+          </>
+        )}
         {activeTab === 'active-tasks' && (
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Create New Task</h2>
