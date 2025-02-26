@@ -20,6 +20,22 @@ const PricingCard = ({ title, price, features }) => {
     return () => unsubscribe();
   }, []);
 
+  const handleBuyCredits = async () => {
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+
+    try {
+      // Here you would implement the credit purchase logic
+      // For now, let's just redirect to dashboard
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error purchasing credits:', error);
+      alert('Failed to purchase credits. Please try again.');
+    }
+  };
+
   const handleGetStarted = async () => {
     if (!user) {
       setShowLogin(true);
