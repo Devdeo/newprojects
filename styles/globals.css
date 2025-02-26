@@ -9,13 +9,13 @@ body {
 }
 
 a {
-  color: #3ea6ff;
+  color: #ff0000;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 a:hover {
-  color: #65b8ff;
+  color: #cc0000;
 }
 
 * {
@@ -23,7 +23,7 @@ a:hover {
 }
 
 button {
-  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  background: #ff0000;
   border: none;
   color: white;
   padding: 0.8rem 1.5rem;
@@ -33,19 +33,20 @@ button {
 }
 
 button:hover {
+  background: #cc0000;
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
 }
 
 input, textarea {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: #1f1f1f;
+  border: 1px solid #333333;
+  color: #ffffff;
   padding: 0.8rem;
   border-radius: 8px;
 }
 
 input:focus, textarea:focus {
   outline: none;
-  border-color: #38bdf8;
+  border-color: #ff0000;
 }
