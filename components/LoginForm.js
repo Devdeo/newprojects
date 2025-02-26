@@ -84,9 +84,8 @@ const LoginForm = ({ onClose }) => {
     setIsLoading(true);
     setError('');
     try {
-      googleProvider.setCustomParameters({
-        prompt: 'select_account'
-      });
+      // Get current domain
+      const domain = window.location.hostname;
       const result = await signInWithPopup(auth, googleProvider);
       await saveUserData(result.user, { authProvider: 'google' });
       onClose();
