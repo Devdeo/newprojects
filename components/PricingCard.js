@@ -11,6 +11,7 @@ const PricingCard = ({ title, price, features }) => {
   const router = useRouter();
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -51,10 +52,22 @@ const PricingCard = ({ title, price, features }) => {
           <li key={index}>{feature}</li>
         ))}
       </ul>
-      {user && (
-        <button onClick={handleGetStarted} className={styles.button}>
-          Access Dashboard
-        </button>
+      {user && title === "Credit" && (
+        <div className={styles.creditControls}>
+          <div className={styles.quantityControl}>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className={styles.quantityButton}>-</button>
+            <span className={styles.quantity}>{quantity}</span>
+            <button onClick={() => setQuantity(quantity + 1)} className={styles.quantityButton}>+</button>
+          </div>
+          <button onClick={handleBuyCredits} className={styles.button}>
+            Buy {quantity} Credit{quantity > 1 ? 's' : ''}
+          </button>
+        </div>
+      )}
+      {user && title === "Free" && (
+        <div className={styles.freeInfo}>
+          <p>Start using your free plan in dashboard</p>
+        </div>
       )}
       {showLogin && <LoginForm onClose={() => setShowLogin(false)} />}
     </div>
