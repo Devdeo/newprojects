@@ -84,13 +84,22 @@ const LoginForm = ({ onClose }) => {
     setIsLoading(true);
     setError('');
     try {
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
       const result = await signInWithPopup(auth, googleProvider);
       await saveUserData(result.user, { authProvider: 'google' });
       onClose();
       router.push('/dashboard');
     } catch (error) {
       console.error('Google sign-in error:', error);
-      setError(error.message || 'Failed to sign in with Google');
+      if (error.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized. Please contact support.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in popup was closed. Please try again.');
+      } else {
+        setError(error.message || 'Failed to sign in with Google');
+      }
     } finally {
       setIsLoading(false);
     }
