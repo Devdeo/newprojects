@@ -36,8 +36,9 @@ const Dashboard = () => {
         const docSnap = await getDoc(userRef);
         
         setUserInfo({
-          name: auth.currentUser.displayName || 'User',
+          name: auth.currentUser.name || 'User',
           email: auth.currentUser.email || 'No email'
+          
         });
 
         if (docSnap.exists()) {
