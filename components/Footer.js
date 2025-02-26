@@ -15,6 +15,7 @@ const Footer = () => {
           <h3>Legal</h3>
           <Link href="/terms">Terms & Conditions</Link>
           <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/refund">Refund Policy</Link>
         </div>
         <div className={styles.social}>
           <h3>Follow Us</h3>
