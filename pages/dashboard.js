@@ -3,6 +3,8 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Dashboard from '../components/Dashboard';
 import Navbar from '../components/Navbar';
+import { auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const DashboardPage = () => {
   const router = useRouter();
