@@ -69,28 +69,42 @@ const Dashboard = () => {
     setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append('title', newTask.title);
-      formData.append('hours', newTask.hours);
-      formData.append('streamKey', newTask.key);
-      formData.append('userId', auth.currentUser.uid);
-      formData.append('video', videoFile);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
+      // Create task in Firestore
+      const taskRef = collection(db, 'tasks');
+      const taskDoc = await addDoc(taskRef, {
+        title: newTask.title,
+        hours: parseInt(newTask.hours),
+        streamKey: newTask.key,
+        userId: auth.currentUser.uid,
+        status: 'active',
+        createdAt: serverTimestamp(),
+        videoUrl: '' // Will be updated after video upload
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create task');
+      if (videoFile) {
+        const formData = new FormData();
+        formData.append('video', videoFile);
+        formData.append('taskId', taskDoc.id);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload video');
+        }
       }
 
-      const result = await response.json();
-      if (result.error) {
-        throw new Error(result.error);
-      }
+      const newTaskData = {
+        id: taskDoc.id,
+        title: newTask.title,
+        hours: parseInt(newTask.hours),
+        streamKey: newTask.key,
+        status: 'active'
+      };
 
-      setTasks([...tasks, result]);
+      setTasks([...tasks, newTaskData]);
       setNewTask({ title: '', hours: '', key: '', videoUrl: '' });
       setVideoFile(null);
       setUploadStatus('success');
