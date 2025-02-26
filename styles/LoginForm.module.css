@@ -86,6 +86,11 @@
   background-color: #0051b3;
 }
 
+.submitButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 .socialLogin {
   margin-top: 1.5rem;
   text-align: center;

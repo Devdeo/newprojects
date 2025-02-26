@@ -16,6 +16,7 @@ const LoginForm = ({ onClose }) => {
     name: ''
   });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const saveUserData = async (user, additionalData = {}) => {
     try {
@@ -40,6 +41,7 @@ const LoginForm = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
       if (!isLogin && credentials.password !== credentials.confirmPassword) {
@@ -56,6 +58,8 @@ const LoginForm = ({ onClose }) => {
       router.push('/dashboard');
     } catch (error) {
       setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -118,8 +122,8 @@ const LoginForm = ({ onClose }) => {
               />
             </div>
           )}
-          <button type="submit" className={styles.submitButton}>
-            {isLogin ? 'Login' : 'Sign Up'}
+          <button type="submit" className={styles.submitButton} disabled={isLoading}>
+            {isLoading ? 'Loading...' : (isLogin ? 'Login' : 'Sign Up')}
           </button>
         </form>
         <div className={styles.googleSignIn}>
