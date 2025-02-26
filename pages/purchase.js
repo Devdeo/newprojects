@@ -1,5 +1,7 @@
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import styles from '../styles/Page.module.css';
@@ -58,12 +60,16 @@ const PurchasePage = () => {
     }
   };
 
-  // Minimal Authentication Check (Replace with proper authentication)
   useEffect(() => {
-    const isLoggedIn = false; // Replace with actual authentication check
-    if (!isLoggedIn) {
-      router.push('/');
-    }
+    const checkAuth = async () => {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          router.push('/');
+        }
+      });
+      return () => unsubscribe();
+    };
+    checkAuth();
   }, []);
 
   return (
