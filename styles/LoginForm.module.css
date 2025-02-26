@@ -189,6 +189,17 @@
   width: 100%;
 }
 
+.forgotPasswordBtn {
+  background: none;
+  border: none;
+  color: #0070f3;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  text-decoration: underline;
+  width: 100%;
+}
+
 .termsCheckbox {
   display: flex;
   align-items: center;
