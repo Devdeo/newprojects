@@ -9,6 +9,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('active-tasks');
   const [creditBalance, setCreditBalance] = useState(0);
+  const [menuVisible, setMenuVisible] = useState(true);
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -123,7 +124,13 @@ const Dashboard = () => {
 
   return (
     <div className={styles.dashboard}>
-      <div className={styles.sidebar}>
+      <button 
+        className={styles.menuToggle}
+        onClick={() => setMenuVisible(!menuVisible)}
+      >
+        ☰
+      </button>
+      <div className={`${styles.sidebar} ${menuVisible ? styles.visible : styles.hidden}`}>
         <button 
           className={activeTab === 'active-tasks' ? styles.active : ''} 
           onClick={() => setActiveTab('active-tasks')}

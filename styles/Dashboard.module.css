@@ -47,6 +47,21 @@
   background: #0051a8;
 }
 
+.menuToggle {
+  position: fixed;
+  top: 80px;
+  left: 20px;
+  z-index: 1000;
+  background: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: none;
+}
+
 .sidebar {
   width: 240px;
   background: white;
@@ -56,6 +71,29 @@
   gap: 12px;
   border-right: 1px solid #e2e8f0;
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .menuToggle {
+    display: block;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    height: 100vh;
+    z-index: 999;
+  }
+  
+  .hidden {
+    transform: translateX(-100%);
+  }
+  
+  .visible {
+    transform: translateX(0);
+  }
 }
 
 .sidebar button {
