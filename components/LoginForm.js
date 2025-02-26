@@ -81,14 +81,18 @@ const LoginForm = ({ onClose }) => {
   };
 
   const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError('');
     try {
-      
       const result = await signInWithPopup(auth, googleProvider);
       await saveUserData(result.user, { authProvider: 'google' });
       onClose();
       router.push('/dashboard');
     } catch (error) {
-      console.log(error)
+      console.error('Google sign-in error:', error);
+      setError(error.message || 'Failed to sign in with Google');
+    } finally {
+      setIsLoading(false);
     }
   };
 
