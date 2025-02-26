@@ -1,3 +1,40 @@
+
+.section {
+  margin: 2rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.section h2 {
+  color: #38bdf8;
+  margin-bottom: 1rem;
+}
+
+.section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.section ul li {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.section ul li:before {
+  content: "•";
+  color: #38bdf8;
+  position: absolute;
+  left: 0;
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
 .container {
   min-height: 100vh;
   display: flex;
