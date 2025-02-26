@@ -1,5 +1,6 @@
 
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Dashboard from '../components/Dashboard';
 import Navbar from '../components/Navbar';
 
