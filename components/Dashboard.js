@@ -13,6 +13,7 @@ const Dashboard = () => {
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userInfo, setUserInfo] = useState({ name: '', email: '' });
   const [newTask, setNewTask] = useState({
     title: '',
     hours: '',
@@ -33,6 +34,11 @@ const Dashboard = () => {
         setIsLoading(true);
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const docSnap = await getDoc(userRef);
+        
+        setUserInfo({
+          name: auth.currentUser.displayName || 'User',
+          email: auth.currentUser.email || 'No email'
+        });
 
         if (docSnap.exists()) {
           const userData = docSnap.data();
@@ -174,6 +180,11 @@ const Dashboard = () => {
         ) : (
           <>
             <div className={styles.statsBar}>
+              <div className={styles.statItem}>
+                <h3>User Info</h3>
+                <p>{userInfo.name}</p>
+                <p className={styles.email}>{userInfo.email}</p>
+              </div>
               <div className={styles.statItem}>
                 <h3>Credit Balance</h3>
                 <p>{creditBalance} credits</p>
