@@ -1,23 +1,31 @@
+
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from '../styles/PricingCard.module.css';
 import LoginForm from './LoginForm';
 import { auth } from '../firebase/config';
-import { createUserSubscription } from '../firebase/firestore'; // Import Firebase functions
+import { createUserSubscription } from '../firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const PricingCard = ({ title, price, features }) => {
   const router = useRouter();
   const [showLogin, setShowLogin] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // In real app, get from auth context
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleGetStarted = async () => {
-    if (!isLoggedIn) {
+    if (!user) {
       setShowLogin(true);
       return;
     }
 
     try {
-      // Create subscription (30 days from now)
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + 30);
 
@@ -40,9 +48,11 @@ const PricingCard = ({ title, price, features }) => {
           <li key={index}>{feature}</li>
         ))}
       </ul>
-      <button onClick={handleGetStarted} className={styles.button}>
-        {isLoggedIn ? 'Access Dashboard' : 'Get Started'}
-      </button>
+      {user && (
+        <button onClick={handleGetStarted} className={styles.button}>
+          Access Dashboard
+        </button>
+      )}
       {showLogin && <LoginForm onClose={() => setShowLogin(false)} />}
     </div>
   );
