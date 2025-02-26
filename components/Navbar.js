@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import Logo from './Logo';
 import { useRouter } from 'next/router';
 import styles from '../styles/Navbar.module.css';
 import LoginForm from './LoginForm';
@@ -33,8 +33,7 @@ const Navbar = () => {
     <>
       <nav className={styles.navbar}>
         <div className={styles.logo}>
-          <Image src="/replit.svg" alt="Logo" width={32} height={32} />
-          <span className={styles.siteName}>My Site</span>
+          <Logo />
         </div>
         {user ? (
           <button className={styles.joinButton} onClick={handleLogout}>
