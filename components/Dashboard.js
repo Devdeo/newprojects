@@ -35,14 +35,12 @@ const Dashboard = () => {
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const docSnap = await getDoc(userRef);
         
-        setUserInfo({
-          name: auth.currentUser.name || 'User',
-          email: auth.currentUser.email || 'No email'
-          
-        });
-
         if (docSnap.exists()) {
           const userData = docSnap.data();
+          setUserInfo({
+            name: userData.name || auth.currentUser.displayName || 'User',
+            email: userData.email || auth.currentUser.email || 'No email'
+          });
           setCreditBalance(userData.creditBalance || 0);
         }
       } catch (error) {
