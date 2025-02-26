@@ -7,13 +7,13 @@
 
 .main {
   min-height: 100vh;
-  padding: 6rem 0 2rem;
+  padding: 4rem 0 1rem;
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  gap: 3rem;
+  gap: 2rem;
 }
 
 .footer {
@@ -161,14 +161,14 @@
 .features {
   width: 100%;
   max-width: 1200px;
-  padding: 3rem;
+  padding: 1.5rem;
 }
 
 .featureGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2.5rem;
-  margin-top: 2rem;
+  gap: 1.5rem;
+  margin-top: 1rem;
 }
 
 .featureCard {
