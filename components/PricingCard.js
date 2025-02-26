@@ -27,12 +27,10 @@ const PricingCard = ({ title, price, features }) => {
     }
 
     try {
-      // Here you would implement the credit purchase logic
-      // For now, let's just redirect to dashboard
-      router.push('/dashboard');
+      router.push(`/purchase?quantity=${quantity}`);
     } catch (error) {
-      console.error('Error purchasing credits:', error);
-      alert('Failed to purchase credits. Please try again.');
+      console.error('Error navigating to purchase:', error);
+      alert('Failed to proceed to purchase. Please try again.');
     }
   };
 
