@@ -1,4 +1,3 @@
-
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
@@ -9,6 +8,7 @@ const PurchasePage = () => {
   const router = useRouter();
   const { quantity } = router.query;
   const [loading, setLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false); // Added state for payment loading
 
   const initializeRazorpay = () => {
     return new Promise((resolve) => {
@@ -27,9 +27,9 @@ const PurchasePage = () => {
       return;
     }
 
-    setLoading(true);
+    setPaymentLoading(true); // Use correct loading state
     try {
-      const amount = (quantity || 1) * 2 * 100; // Convert to smallest currency unit
+      const amount = (quantity || 1) * 2 * 100; 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
         amount: amount,
@@ -54,9 +54,17 @@ const PurchasePage = () => {
       console.error('Payment error:', error);
       alert('Payment failed. Please try again.');
     } finally {
-      setLoading(false);
+      setPaymentLoading(false); // Use correct loading state
     }
   };
+
+  // Minimal Authentication Check (Replace with proper authentication)
+  useEffect(() => {
+    const isLoggedIn = false; // Replace with actual authentication check
+    if (!isLoggedIn) {
+      router.push('/');
+    }
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -74,9 +82,9 @@ const PurchasePage = () => {
             <button 
               className={styles.payButton}
               onClick={makePayment}
-              disabled={loading}
+              disabled={paymentLoading} // Use correct loading state
             >
-              {loading ? 'Processing...' : 'Pay Now'}
+              {paymentLoading ? 'Processing...' : 'Pay Now'}
             </button>
           </div>
         </div>
