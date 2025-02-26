@@ -1,4 +1,8 @@
 import Head from "next/head";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { auth } from '../firebase/config';
+import { onAuthStateChanged } from 'firebase/auth';
 import styles from "../styles/Home.module.css";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -7,6 +11,23 @@ import PricingCard from '../components/PricingCard';
 import Review from '../components/Review';
 
 const Home = () => {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        router.push('/dashboard');
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (user) {
+    return null;
+  }
+
   return (
     <div className={styles.container}>
       <Head>
