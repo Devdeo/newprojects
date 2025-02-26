@@ -69,16 +69,16 @@ const Dashboard = () => {
     setUploadProgress(0);
 
     try {
-      // Create task in Firestore
-      const taskRef = collection(db, 'tasks');
-      const taskDoc = await addDoc(taskRef, {
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const tasksRef = collection(userRef, 'tasks');
+      
+      const taskDoc = await addDoc(tasksRef, {
         title: newTask.title,
         hours: parseInt(newTask.hours),
         streamKey: newTask.key,
-        userId: auth.currentUser.uid,
         status: 'active',
         createdAt: serverTimestamp(),
-        videoUrl: '' // Will be updated after video upload
+        videoUrl: ''
       });
 
       if (videoFile) {
@@ -101,7 +101,8 @@ const Dashboard = () => {
         title: newTask.title,
         hours: parseInt(newTask.hours),
         streamKey: newTask.key,
-        status: 'active'
+        status: 'active',
+        createdAt: new Date()
       };
 
       setTasks([...tasks, newTaskData]);
@@ -128,11 +129,16 @@ const Dashboard = () => {
       if (!auth.currentUser) return;
 
       try {
-        const response = await fetch(`/api/tasks?userId=${auth.currentUser.uid}`);
-        if (response.ok) {
-          const data = await response.json();
-          setTasks(data);
-        }
+        const userRef = doc(db, 'users', auth.currentUser.uid);
+        const tasksRef = collection(userRef, 'tasks');
+        const querySnapshot = await getDocs(tasksRef);
+        
+        const fetchedTasks = [];
+        querySnapshot.forEach((doc) => {
+          fetchedTasks.push({ id: doc.id, ...doc.data() });
+        });
+        
+        setTasks(fetchedTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
       }
