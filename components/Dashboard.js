@@ -77,17 +77,42 @@ const Dashboard = () => {
   const handleVideoChange = (e) => {
     if (e.target.files[0]) {
       setVideoFile(e.target.files[0]);
+      setIsFileUploaded(true);
+      
+      // Simulate file processing/validation
+      setIsUploading(true);
+      setUploadStatus('processing');
+      setUploadProgress(0);
+      
+      // Simulate progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setUploadStatus('ready');
+            setIsUploading(false);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 300);
+    } else {
+      setIsFileUploaded(false);
+      setVideoFile(null);
     }
   };
 
   const [uploadStatus, setUploadStatus] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isFileUploaded, setIsFileUploaded] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setLoading(true);
     setUploadStatus('uploading');
     setUploadProgress(0);
+    setIsUploading(true);
 
     try {
       const userRef = doc(db, 'users', auth.currentUser.uid);
@@ -167,6 +192,8 @@ const Dashboard = () => {
         endTime: ''
       });
       setVideoFile(null);
+      setIsFileUploaded(false);
+      setIsUploading(false);
       setUploadStatus('success');
       setUploadProgress(100);
 
@@ -340,6 +367,8 @@ const Dashboard = () => {
                 required
               />
               
+              
+              
               <div className={styles.formGroup}>
                 <label>Upload Video File</label>
                 <input
@@ -348,20 +377,37 @@ const Dashboard = () => {
                   onChange={handleVideoChange}
                   required
                 />
+                {isUploading && (
+                  <div className={styles.fileUploadStatus}>
+                    <div className={styles.progressBar}>
+                      <div 
+                        className={styles.progressFill} 
+                        style={{width: `${uploadProgress}%`}}
+                      ></div>
+                    </div>
+                    <p className={styles.uploadingMessage}>
+                      {uploadStatus === 'processing' ? 'Processing video file...' : 'Uploading video...'} {uploadProgress}% complete
+                      {videoFile && <span> - File: {videoFile.name}</span>}
+                    </p>
+                  </div>
+                )}
               </div>
               
               <div className={styles.formGroup}>
                 <label>Stream Key</label>
                 <input
                   type="text"
-                  placeholder="YouTube Stream Key"
+                  placeholder={isFileUploaded ? "YouTube Stream Key" : "Upload a video file first"}
                   value={newTask.key}
                   onChange={(e) => setNewTask({...newTask, key: e.target.value})}
+                  disabled={!isFileUploaded || isUploading}
                   required
+                  className={(!isFileUploaded || isUploading) ? styles.disabledInput : ''}
                 />
                 <button 
                   type="button" 
                   className={styles.verifyButton}
+                  disabled={!isFileUploaded || !newTask.key || isUploading}
                   onClick={() => {
                     if (!newTask.key) {
                       alert('Please enter a stream key first');
@@ -440,7 +486,11 @@ const Dashboard = () => {
                 )}
               </div>
               
-              <button type="submit" disabled={loading} className={styles.submitButton}>
+              <button 
+                type="submit" 
+                disabled={loading || !isFileUploaded || isUploading} 
+                className={styles.submitButton}
+              >
                 {loading ? 'Processing...' : newTask.scheduleType === 'schedule' ? 'Schedule Stream' : 'Start Live Stream'}
               </button>
               
