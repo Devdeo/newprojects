@@ -3,7 +3,7 @@ import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth } from '../firebase/config';
 import { db } from '../firebase/config';
-import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, getDoc, getDocs, serverTimestamp } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Dashboard = () => {
@@ -132,7 +132,7 @@ const Dashboard = () => {
       try {
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const tasksRef = collection(userRef, 'tasks');
-        const querySnapshot = await getDoc(tasksRef);
+        const querySnapshot = await getDocs(tasksRef);
         
         const fetchedTasks = [];
         querySnapshot.forEach((doc) => {
@@ -248,11 +248,15 @@ const Dashboard = () => {
             <div className={styles.dashboardSummary}>
               <div className={styles.summaryCard}>
                 <h3>Active Streams</h3>
-                <p className={styles.summaryNumber}>0</p>
+                <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'active').length}</p>
               </div>
               <div className={styles.summaryCard}>
                 <h3>Scheduled Streams</h3>
-                <p className={styles.summaryNumber}>0</p>
+                <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'scheduled').length}</p>
+              </div>
+              <div className={styles.summaryCard}>
+                <h3>Previous Streams</h3>
+                <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'completed').length}</p>
               </div>
               <div className={styles.summaryCard}>
                 <h3>Credit Balance</h3>
