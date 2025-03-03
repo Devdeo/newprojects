@@ -552,33 +552,6 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.navSelectContainer {
-  padding: 15px;
-  width: 100%;
-}
-
-.navSelect {
-  width: 100%;
-  padding: 10px 15px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  background-color: white;
-  font-size: 16px;
-  color: #1e293b;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.navSelect:focus {
-  border-color: #4C51BF;
-  box-shadow: 0 0 0 2px rgba(76, 81, 191, 0.2);
-}
-
-.navSelect option {
-  padding: 10px;
-}
-
 .taskCard:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);

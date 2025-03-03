@@ -222,21 +222,48 @@ const Dashboard = () => {
         ☰
       </button>
       <div className={`${styles.sidebar} ${menuVisible ? styles.visible : styles.hidden}`}>
-        <div className={styles.navSelectContainer}>
-          <select 
-            className={styles.navSelect}
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-          >
-            <option value="dashboard">Dashboard</option>
-            <option value="create-live">Create Live</option>
-            <option value="active-live">Active Live</option>
-            <option value="schedule-live">Schedule Live</option>
-            <option value="previous-live">Previous Live</option>
-            <option value="wallet-history">Wallet History</option>
-            <option value="account-settings">Account Settings</option>
-          </select>
-        </div>
+        <button 
+          className={activeTab === 'dashboard' ? styles.active : ''} 
+          onClick={() => setActiveTab('dashboard')}
+        >
+          Dashboard
+        </button>
+        <button 
+          className={activeTab === 'create-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('create-live')}
+        >
+          Create Live
+        </button>
+        <button 
+          className={activeTab === 'active-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('active-live')}
+        >
+          Active Live
+        </button>
+        <button 
+          className={activeTab === 'schedule-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('schedule-live')}
+        >
+          Schedule Live
+        </button>
+        <button 
+          className={activeTab === 'previous-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('previous-live')}
+        >
+          Previous Live
+        </button>
+        <button 
+          className={activeTab === 'wallet-history' ? styles.active : ''} 
+          onClick={() => setActiveTab('wallet-history')}
+        >
+          Wallet History
+        </button>
+        <button 
+          className={activeTab === 'account-settings' ? styles.active : ''} 
+          onClick={() => setActiveTab('account-settings')}
+        >
+          Account Settings
+        </button>
       </div>
 
       <div className={styles.content}>
