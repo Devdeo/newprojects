@@ -77,13 +77,6 @@ const Dashboard = () => {
   const handleVideoChange = (e) => {
     if (e.target.files[0]) {
       setVideoFile(e.target.files[0]);
-      
-      // If stream key is empty, suggest a random one
-      if (!newTask.key) {
-        const randomKey = 'sk_' + Math.random().toString(36).substring(2, 12);
-        setNewTask({...newTask, key: randomKey});
-        alert('A random stream key has been generated. You can modify it if needed.');
-      }
     }
   };
 
