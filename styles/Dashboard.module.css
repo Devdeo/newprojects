@@ -503,27 +503,33 @@
   color: #1e293b;
 }
 
-.optionTabs {
-  display: flex;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #e2e8f0;
+.selectOptionContainer {
+  margin-bottom: 20px;
+  width: 100%;
 }
 
-.optionTabs button {
-  flex: 1;
-  background-color: transparent;
-  color: #64748b;
+.streamTypeSelect {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  font-size: 16px;
+  color: #1e293b;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.streamTypeSelect:focus {
+  border-color: #4C51BF;
+  box-shadow: 0 0 0 2px rgba(76, 81, 191, 0.2);
+}
+
+.streamTypeSelect option {
   padding: 10px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  margin-right: 10px;
 }
 
-.activeOptionTab {
-  color: #4C51BF !important;
-  border-bottom: 2px solid #4C51BF !important;
-  font-weight: 600;
-}
 
 .nowOptions, .scheduleOptions {
   padding: 10px 0;

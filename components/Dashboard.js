@@ -391,21 +391,15 @@ const Dashboard = () => {
               <div className={styles.streamOptions}>
                 <h3>Streaming Options</h3>
                 
-                <div className={styles.optionTabs}>
-                  <button 
-                    type="button"
-                    className={newTask.scheduleType === 'now' ? styles.activeOptionTab : ''}
-                    onClick={() => setNewTask({...newTask, scheduleType: 'now'})}
+                <div className={styles.selectOptionContainer}>
+                  <select
+                    className={styles.streamTypeSelect}
+                    value={newTask.scheduleType}
+                    onChange={(e) => setNewTask({...newTask, scheduleType: e.target.value})}
                   >
-                    Live Now
-                  </button>
-                  <button 
-                    type="button"
-                    className={newTask.scheduleType === 'schedule' ? styles.activeOptionTab : ''}
-                    onClick={() => setNewTask({...newTask, scheduleType: 'schedule'})}
-                  >
-                    Schedule Live
-                  </button>
+                    <option value="now">Live Now</option>
+                    <option value="schedule">Schedule Live</option>
+                  </select>
                 </div>
                 
                 {(!newTask.scheduleType || newTask.scheduleType === 'now') && (
