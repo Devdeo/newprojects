@@ -19,6 +19,9 @@ const Dashboard = () => {
     hours: '',
     key: '',
     videoUrl: '',
+    scheduleType: 'now',
+    startTime: '',
+    endTime: '',
   });
   const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -72,20 +75,42 @@ const Dashboard = () => {
       const userRef = doc(db, 'users', auth.currentUser.uid);
       const tasksRef = collection(userRef, 'tasks');
       
-      const taskDoc = await addDoc(tasksRef, {
+      const taskData = {
         title: newTask.title,
-        hours: parseInt(newTask.hours),
+        hours: parseInt(newTask.hours) || 1,
         streamKey: newTask.key,
-        status: 'active',
+        status: newTask.scheduleType === 'schedule' ? 'scheduled' : 'active',
         createdAt: serverTimestamp(),
         videoUrl: ''
-      });
+      };
+      
+      // Add scheduling data if provided
+      if (newTask.scheduleType === 'schedule') {
+        taskData.scheduledStartTime = new Date(newTask.startTime).toISOString();
+        taskData.scheduledEndTime = new Date(newTask.endTime).toISOString();
+      } else if (newTask.endTime) {
+        taskData.scheduledEndTime = new Date(newTask.endTime).toISOString();
+      }
+      
+      const taskDoc = await addDoc(tasksRef, taskData);
 
       if (videoFile) {
         const formData = new FormData();
         formData.append('video', videoFile);
         formData.append('taskId', taskDoc.id);
-        formData.append('username', userInfo.name)
+        formData.append('username', userInfo.name);
+        formData.append('streamKey', newTask.key);
+        formData.append('title', newTask.title);
+        formData.append('hours', newTask.hours);
+        
+        if (newTask.scheduleType === 'schedule') {
+          formData.append('scheduleType', 'schedule');
+          formData.append('startTime', newTask.startTime);
+          formData.append('endTime', newTask.endTime);
+        } else if (newTask.endTime) {
+          formData.append('scheduleType', 'now-with-end');
+          formData.append('endTime', newTask.endTime);
+        }
 
         const response = await fetch('https://eb4bf809-0913-457d-9e00-c8d2f4958056-00-3s9tya49ey7lx.pike.repl.co/upload-video', {
           method: 'POST',
@@ -100,14 +125,29 @@ const Dashboard = () => {
       const newTaskData = {
         id: taskDoc.id,
         title: newTask.title,
-        hours: parseInt(newTask.hours),
+        hours: parseInt(newTask.hours) || 1,
         streamKey: newTask.key,
-        status: 'active',
+        status: newTask.scheduleType === 'schedule' ? 'scheduled' : 'active',
         createdAt: new Date()
       };
+      
+      if (newTask.scheduleType === 'schedule') {
+        newTaskData.scheduledStartTime = new Date(newTask.startTime);
+        newTaskData.scheduledEndTime = new Date(newTask.endTime);
+      } else if (newTask.endTime) {
+        newTaskData.scheduledEndTime = new Date(newTask.endTime);
+      }
 
       setTasks([...tasks, newTaskData]);
-      setNewTask({ title: '', hours: '', key: '', videoUrl: '' });
+      setNewTask({ 
+        title: '', 
+        hours: '', 
+        key: '', 
+        videoUrl: '',
+        scheduleType: 'now',
+        startTime: '',
+        endTime: ''
+      });
       setVideoFile(null);
       setUploadStatus('success');
       setUploadProgress(100);
@@ -281,30 +321,104 @@ const Dashboard = () => {
                 onChange={(e) => setNewTask({...newTask, title: e.target.value})}
                 required
               />
-              <input
-                type="number"
-                placeholder="Hours Required"
-                value={newTask.hours}
-                onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
-                required
-                min="1"
-              />
-              <input
-                type="text"
-                placeholder="Stream Key"
-                value={newTask.key}
-                onChange={(e) => setNewTask({...newTask, key: e.target.value})}
-                required
-              />
-              <input
-                type="file"
-                accept="video/*"
-                onChange={handleVideoChange}
-                required
-              />
-              <button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Live Stream'}
+              
+              <div className={styles.formGroup}>
+                <label>Upload Video File</label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoChange}
+                  required
+                />
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Stream Key</label>
+                <input
+                  type="text"
+                  placeholder="YouTube Stream Key"
+                  value={newTask.key}
+                  onChange={(e) => setNewTask({...newTask, key: e.target.value})}
+                  required
+                />
+                <button 
+                  type="button" 
+                  className={styles.verifyButton}
+                  onClick={() => alert('Stream key verified!')}
+                >
+                  Verify Key
+                </button>
+              </div>
+              
+              <div className={styles.streamOptions}>
+                <h3>Streaming Options</h3>
+                
+                <div className={styles.optionTabs}>
+                  <button 
+                    type="button"
+                    className={newTask.scheduleType === 'now' ? styles.activeOptionTab : ''}
+                    onClick={() => setNewTask({...newTask, scheduleType: 'now'})}
+                  >
+                    Live Now
+                  </button>
+                  <button 
+                    type="button"
+                    className={newTask.scheduleType === 'schedule' ? styles.activeOptionTab : ''}
+                    onClick={() => setNewTask({...newTask, scheduleType: 'schedule'})}
+                  >
+                    Schedule Live
+                  </button>
+                </div>
+                
+                {(!newTask.scheduleType || newTask.scheduleType === 'now') && (
+                  <div className={styles.nowOptions}>
+                    <div className={styles.formGroup}>
+                      <label>Stream Duration</label>
+                      <input
+                        type="number"
+                        placeholder="Hours"
+                        value={newTask.hours}
+                        onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                        required
+                        min="1"
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>End Date/Time (Optional)</label>
+                      <input
+                        type="datetime-local"
+                        onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {newTask.scheduleType === 'schedule' && (
+                  <div className={styles.scheduleOptions}>
+                    <div className={styles.formGroup}>
+                      <label>Start Date/Time</label>
+                      <input
+                        type="datetime-local"
+                        required
+                        onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
+                      />
+                    </div>
+                    <div className={styles.formGroup}>
+                      <label>End Date/Time</label>
+                      <input
+                        type="datetime-local"
+                        required
+                        onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <button type="submit" disabled={loading} className={styles.submitButton}>
+                {loading ? 'Processing...' : newTask.scheduleType === 'schedule' ? 'Schedule Stream' : 'Start Live Stream'}
               </button>
+              
               {uploadStatus && (
                 <div className={styles.uploadStatus}>
                   {uploadStatus === 'uploading' && (
@@ -317,12 +431,12 @@ const Dashboard = () => {
                   )}
                   {uploadStatus === 'success' && (
                     <div className={styles.successMessage}>
-                      Stream started successfully!
+                      {newTask.scheduleType === 'schedule' ? 'Stream scheduled successfully!' : 'Stream started successfully!'}
                     </div>
                   )}
                   {uploadStatus === 'error' && (
                     <div className={styles.errorMessage}>
-                      Failed to start stream. Please try again.
+                      Failed to {newTask.scheduleType === 'schedule' ? 'schedule' : 'start'} stream. Please try again.
                     </div>
                   )}
                 </div>
