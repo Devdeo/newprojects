@@ -85,8 +85,9 @@ const Dashboard = () => {
         const formData = new FormData();
         formData.append('video', videoFile);
         formData.append('taskId', taskDoc.id);
+        formData.append('username', userInfo.name)
 
-        const response = await fetch('/api/upload', {
+        const response = await fetch('https://eb4bf809-0913-457d-9e00-c8d2f4958056-00-3s9tya49ey7lx.pike.repl.co/upload-video', {
           method: 'POST',
           body: formData,
         });
@@ -131,7 +132,7 @@ const Dashboard = () => {
       try {
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const tasksRef = collection(userRef, 'tasks');
-        const querySnapshot = await getDocs(tasksRef);
+        const querySnapshot = await getDoc(tasksRef);
         
         const fetchedTasks = [];
         querySnapshot.forEach((doc) => {
