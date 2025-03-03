@@ -618,27 +618,37 @@ const Dashboard = () => {
                 />
                 <small>Enter the number of hours your stream will run</small>
               </div>
-              <input
-                type="text"
-                placeholder="Stream Key"
-                required
-              />
-              <input
-                type="file"
-                accept="video/*"
-                required
-              />
+              <div className={styles.formGroup}>
+                <label>Upload Video File</label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Stream Key</label>
+                <input
+                  type="text"
+                  placeholder="YouTube Stream Key"
+                  required
+                />
+              </div>
               <div className={styles.scheduleFields}>
                 <label>Start Date and Time</label>
                 <input type="datetime-local" required />
               </div>
-              <button type="submit">
+              <div className={styles.scheduleFields}>
+                <label>End Date and Time</label>
+                <input type="datetime-local" required />
+              </div>
+              <button type="submit" className={styles.submitButton}>
                 Schedule Stream
               </button>
             </form>
             
             <div className={styles.tableContainer}>
-              <h3>Created Schedule Streams</h3>
+              <h3>Scheduled Streams</h3>
               <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
                   <tr>
@@ -647,6 +657,7 @@ const Dashboard = () => {
                     <th>Stream Key</th>
                     <th>Scheduled Start</th>
                     <th>Scheduled End</th>
+                    <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -661,6 +672,7 @@ const Dashboard = () => {
                         <td>{task.streamKey}</td>
                         <td>{task.scheduledStartTime ? new Date(task.scheduledStartTime).toLocaleString() : 'N/A'}</td>
                         <td>{task.scheduledEndTime ? new Date(task.scheduledEndTime).toLocaleString() : 'N/A'}</td>
+                        <td><span className={styles.statusBadge}>{task.status}</span></td>
                         <td>
                           <button className={`${styles.actionButton} ${styles.liveNowButton}`}>Live Now</button>
                           <button className={styles.actionButton}>Edit</button>
@@ -670,7 +682,7 @@ const Dashboard = () => {
                     ))}
                   {!tasks.filter(task => task.status === 'scheduled').length && (
                     <tr>
-                      <td colSpan="6" className={styles.emptyMessage}>No scheduled streams found.</td>
+                      <td colSpan="7" className={styles.emptyMessage}>No scheduled streams found.</td>
                     </tr>
                   )}
                 </tbody>
