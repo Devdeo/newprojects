@@ -43,6 +43,106 @@ const Dashboard = () => {
     { id: 'TRX-1011', date: new Date().toISOString(), description: 'Stream: "Product review"', amount: 3, type: 'debit', balance: 176 },
     { id: 'TRX-1012', date: new Date().toISOString(), description: 'Stream: "Live podcast"', amount: 4, type: 'debit', balance: 172 }
   ]);
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isFileUploaded, setIsFileUploaded] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [fileDetails, setFileDetails] = useState({
+    duration: null,
+    size: null,
+    format: null
+  });
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getVideoFormat = (fileName) => {
+    const extension = fileName.split('.').pop().toLowerCase();
+    return extension;
+  };
+
+  const getVideoDuration = (file) => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+
+      video.onloadedmetadata = function() {
+        window.URL.revokeObjectURL(video.src);
+        const duration = video.duration;
+        resolve(duration);
+      };
+
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
+  const formatDuration = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    return [
+      hours > 0 ? String(hours).padStart(2, '0') : null,
+      String(minutes).padStart(2, '0'),
+      String(secs).padStart(2, '0')
+    ].filter(Boolean).join(':');
+  };
+
+  const handleVideoChange = async (e) => {
+    if (e.target.files[0]) {
+      const file = e.target.files[0];
+      setVideoFile(file);
+      setIsFileUploaded(true);
+
+      // Get file details
+      const format = getVideoFormat(file.name);
+      const size = formatFileSize(file.size);
+
+      // Simulate file processing/validation
+      setIsUploading(true);
+      setUploadStatus('processing');
+      setUploadProgress(0);
+
+      try {
+        // Get video duration
+        const durationInSeconds = await getVideoDuration(file);
+        const formattedDuration = formatDuration(durationInSeconds);
+
+        setFileDetails({
+          duration: formattedDuration,
+          size: size,
+          format: format
+        });
+      } catch (error) {
+        console.error('Error getting video details:', error);
+      }
+
+      // Simulate progress
+      const interval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            setUploadStatus('ready');
+            setIsUploading(false);
+            return 100;
+          }
+          return prev + 10;
+        });
+      }, 300);
+    } else {
+      setIsFileUploaded(false);
+      setVideoFile(null);
+      setFileDetails({
+        duration: null,
+        size: null,
+        format: null
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,7 +155,7 @@ const Dashboard = () => {
         setIsLoading(true);
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const docSnap = await getDoc(userRef);
-        
+
         if (docSnap.exists()) {
           const userData = docSnap.data();
           setUserInfo({
@@ -74,38 +174,6 @@ const Dashboard = () => {
     fetchUserData();
   }, []);
 
-  const handleVideoChange = (e) => {
-    if (e.target.files[0]) {
-      setVideoFile(e.target.files[0]);
-      setIsFileUploaded(true);
-      
-      // Simulate file processing/validation
-      setIsUploading(true);
-      setUploadStatus('processing');
-      setUploadProgress(0);
-      
-      // Simulate progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setUploadStatus('ready');
-            setIsUploading(false);
-            return 100;
-          }
-          return prev + 10;
-        });
-      }, 300);
-    } else {
-      setIsFileUploaded(false);
-      setVideoFile(null);
-    }
-  };
-
-  const [uploadStatus, setUploadStatus] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isFileUploaded, setIsFileUploaded] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
@@ -117,7 +185,7 @@ const Dashboard = () => {
     try {
       const userRef = doc(db, 'users', auth.currentUser.uid);
       const tasksRef = collection(userRef, 'tasks');
-      
+
       const taskData = {
         title: newTask.title,
         hours: parseInt(newTask.hours) || 1,
@@ -126,7 +194,7 @@ const Dashboard = () => {
         createdAt: serverTimestamp(),
         videoUrl: ''
       };
-      
+
       // Add scheduling data if provided
       if (newTask.scheduleType === 'schedule') {
         taskData.scheduledStartTime = new Date(newTask.startTime).toISOString();
@@ -134,7 +202,7 @@ const Dashboard = () => {
       } else if (newTask.endTime) {
         taskData.scheduledEndTime = new Date(newTask.endTime).toISOString();
       }
-      
+
       const taskDoc = await addDoc(tasksRef, taskData);
 
       if (videoFile) {
@@ -145,7 +213,7 @@ const Dashboard = () => {
         formData.append('streamKey', newTask.key);
         formData.append('title', newTask.title);
         formData.append('hours', newTask.hours);
-        
+
         if (newTask.scheduleType === 'schedule') {
           formData.append('scheduleType', 'schedule');
           formData.append('startTime', newTask.startTime);
@@ -173,7 +241,7 @@ const Dashboard = () => {
         status: newTask.scheduleType === 'schedule' ? 'scheduled' : 'active',
         createdAt: new Date()
       };
-      
+
       if (newTask.scheduleType === 'schedule') {
         newTaskData.scheduledStartTime = new Date(newTask.startTime);
         newTaskData.scheduledEndTime = new Date(newTask.endTime);
@@ -218,12 +286,12 @@ const Dashboard = () => {
         const userRef = doc(db, 'users', auth.currentUser.uid);
         const tasksRef = collection(userRef, 'tasks');
         const querySnapshot = await getDocs(tasksRef);
-        
+
         const fetchedTasks = [];
         querySnapshot.forEach((doc) => {
           fetchedTasks.push({ id: doc.id, ...doc.data() });
         });
-        
+
         setTasks(fetchedTasks);
       } catch (error) {
         console.error('Error fetching tasks:', error);
@@ -366,9 +434,9 @@ const Dashboard = () => {
                 onChange={(e) => setNewTask({...newTask, title: e.target.value})}
                 required
               />
-              
-              
-              
+
+
+
               <div className={styles.formGroup}>
                 <label>Upload Video File</label>
                 <input
@@ -389,10 +457,13 @@ const Dashboard = () => {
                       {uploadStatus === 'processing' ? 'Processing video file...' : 'Uploading video...'} {uploadProgress}% complete
                       {videoFile && <span> - File: {videoFile.name}</span>}
                     </p>
+                    {fileDetails.duration && (
+                      <p>Duration: {fileDetails.duration}, Size: {fileDetails.size}, Format: {fileDetails.format}</p>
+                    )}
                   </div>
                 )}
               </div>
-              
+
               <div className={styles.formGroup}>
                 <div className={styles.labelWithInfo}>
                   <label>Stream Key</label>
@@ -424,7 +495,7 @@ const Dashboard = () => {
                       alert('Please enter a stream key first');
                       return;
                     }
-                    
+
                     // In a real application, you would verify with YouTube API
                     // For now, we'll just do a basic validation
                     if (newTask.key.length < 8) {
@@ -437,10 +508,10 @@ const Dashboard = () => {
                   Verify Key
                 </button>
               </div>
-              
+
               <div className={styles.streamOptions}>
                 <h3>Streaming Options</h3>
-                
+
                 <div className={styles.selectOptionContainer}>
                   <select
                     className={styles.streamTypeSelect}
@@ -451,7 +522,7 @@ const Dashboard = () => {
                     <option value="schedule">Schedule Live</option>
                   </select>
                 </div>
-                
+
                 {(!newTask.scheduleType || newTask.scheduleType === 'now') && (
                   <div className={styles.nowOptions}>
                     <div className={styles.formGroup}>
@@ -474,7 +545,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )}
-                
+
                 {newTask.scheduleType === 'schedule' && (
                   <div className={styles.scheduleOptions}>
                     <div className={styles.formGroup}>
@@ -496,7 +567,7 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-              
+
               <button 
                 type="submit" 
                 disabled={loading || !isFileUploaded || isUploading} 
@@ -504,7 +575,7 @@ const Dashboard = () => {
               >
                 {loading ? 'Processing...' : newTask.scheduleType === 'schedule' ? 'Schedule Stream' : 'Start Live Stream'}
               </button>
-              
+
               {uploadStatus && (
                 <div className={styles.uploadStatus}>
                   {uploadStatus === 'uploading' && (
@@ -573,7 +644,7 @@ const Dashboard = () => {
                   )}
                 </tbody>
               </table>
-              
+
               {tasks.filter(task => task.status === 'active').length > 0 && (
                 <div className={styles.pagination}>
                   <button 
@@ -646,7 +717,7 @@ const Dashboard = () => {
                 Schedule Stream
               </button>
             </form>
-            
+
             <div className={styles.tableContainer}>
               <h3>Scheduled Streams</h3>
               <table className={`${styles.dataTable} ${styles.borderedTable}`}>
@@ -687,7 +758,7 @@ const Dashboard = () => {
                   )}
                 </tbody>
               </table>
-              
+
               {tasks.filter(task => task.status === 'scheduled').length > 0 && (
                 <div className={styles.pagination}>
                   <button 
@@ -752,7 +823,7 @@ const Dashboard = () => {
                   )}
                 </tbody>
               </table>
-              
+
               {tasks.filter(task => task.status === 'completed').length > 0 && (
                 <div className={styles.pagination}>
                   <button 
@@ -832,7 +903,7 @@ const Dashboard = () => {
                     )}
                   </tbody>
                 </table>
-                
+
                 {transactions.length > 0 && (
                   <div className={styles.pagination}>
                     <button 
