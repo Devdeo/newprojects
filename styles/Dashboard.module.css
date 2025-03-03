@@ -164,6 +164,128 @@
   color: #666;
   font-size: 12px;
   margin-top: 5px;
+
+/* Table styling */
+.tableContainer {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-top: 20px;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dataTable th {
+  background-color: #f8fafc;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.dataTable tr:hover {
+  background-color: #f8fafc;
+}
+
+.dataTable tr:last-child td {
+  border-bottom: none;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dataTable .statusBadge {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.dataTable .statusCredit {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.dataTable .statusDebit {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.actionButton {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: none;
+  background-color: #4C51BF;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.actionButton:hover {
+  background-color: #434190;
+}
+
+.emptyMessage {
+  color: #94a3b8;
+  text-align: center;
+  padding: 20px !important;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 10px 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.paginationButton {
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #4C51BF;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: #4C51BF;
+  color: white;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  color: #64748b;
+  font-size: 14px;
+}
+
 }
 
 .checkboxGroup {

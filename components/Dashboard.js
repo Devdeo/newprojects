@@ -25,6 +25,24 @@ const Dashboard = () => {
   });
   const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activePage, setActivePage] = useState(1);
+  const [schedulePage, setSchedulePage] = useState(1);
+  const [previousPage, setPreviousPage] = useState(1);
+  const [walletPage, setWalletPage] = useState(1);
+  const [transactions, setTransactions] = useState([
+    { id: 'TRX-1001', date: new Date().toISOString(), description: 'Initial credit purchase', amount: 100, type: 'credit', balance: 100 },
+    { id: 'TRX-1002', date: new Date().toISOString(), description: 'Stream: "Welcome to my channel"', amount: 5, type: 'debit', balance: 95 },
+    { id: 'TRX-1003', date: new Date().toISOString(), description: 'Stream: "Gaming with friends"', amount: 3, type: 'debit', balance: 92 },
+    { id: 'TRX-1004', date: new Date().toISOString(), description: 'Bonus credits', amount: 10, type: 'credit', balance: 102 },
+    { id: 'TRX-1005', date: new Date().toISOString(), description: 'Credit package - Basic', amount: 20, type: 'credit', balance: 122 },
+    { id: 'TRX-1006', date: new Date().toISOString(), description: 'Stream: "Tutorial session"', amount: 2, type: 'debit', balance: 120 },
+    { id: 'TRX-1007', date: new Date().toISOString(), description: 'Stream: "Weekly update"', amount: 1, type: 'debit', balance: 119 },
+    { id: 'TRX-1008', date: new Date().toISOString(), description: 'Credit package - Premium', amount: 50, type: 'credit', balance: 169 },
+    { id: 'TRX-1009', date: new Date().toISOString(), description: 'Stream: "Q&A session"', amount: 5, type: 'debit', balance: 164 },
+    { id: 'TRX-1010', date: new Date().toISOString(), description: 'Referral bonus', amount: 15, type: 'credit', balance: 179 },
+    { id: 'TRX-1011', date: new Date().toISOString(), description: 'Stream: "Product review"', amount: 3, type: 'debit', balance: 176 },
+    { id: 'TRX-1012', date: new Date().toISOString(), description: 'Stream: "Live podcast"', amount: 4, type: 'debit', balance: 172 }
+  ]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -476,27 +494,63 @@ const Dashboard = () => {
         {activeTab === 'active-live' && (
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
-            <div className={styles.taskList}>
-              {tasks
-                .filter(task => task.status === 'active')
-                .map(task => (
-                  <div key={task.id} className={styles.taskCard}>
-                    <h3>{task.title}</h3>
-                    <p>Hours: {task.hours}</p>
-                    <p>Key: {task.key}</p>
-                    {task.videoUrl && (
-                      <video width="100%" controls>
-                        <source src={task.videoUrl} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    )}
-                    <span className={styles.status}>{task.status}</span>
-                    <p className={styles.timestamp}>Started: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</p>
-                    <button className={styles.stopButton}>Stop Stream</button>
-                  </div>
-                ))}
-              {!tasks.filter(task => task.status === 'active').length && (
-                <p>No active streams found.</p>
+            <div className={styles.tableContainer}>
+              <table className={styles.dataTable}>
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Hours</th>
+                    <th>Stream Key</th>
+                    <th>Status</th>
+                    <th>Start Time</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks
+                    .filter(task => task.status === 'active')
+                    .slice((activePage - 1) * 10, activePage * 10)
+                    .map(task => (
+                      <tr key={task.id}>
+                        <td>{task.title}</td>
+                        <td>{task.hours} hours</td>
+                        <td>{task.streamKey}</td>
+                        <td><span className={styles.statusBadge}>{task.status}</span></td>
+                        <td>{task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</td>
+                        <td>
+                          <button className={styles.actionButton}>Stop</button>
+                          <button className={styles.actionButton}>View</button>
+                        </td>
+                      </tr>
+                    ))}
+                  {!tasks.filter(task => task.status === 'active').length && (
+                    <tr>
+                      <td colSpan="6" className={styles.emptyMessage}>No active streams found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              
+              {tasks.filter(task => task.status === 'active').length > 0 && (
+                <div className={styles.pagination}>
+                  <button 
+                    className={styles.paginationButton} 
+                    disabled={activePage === 1}
+                    onClick={() => setActivePage(activePage - 1)}
+                  >
+                    Previous
+                  </button>
+                  <span className={styles.pageInfo}>
+                    Page {activePage} of {Math.ceil(tasks.filter(task => task.status === 'active').length / 10)}
+                  </span>
+                  <button 
+                    className={styles.paginationButton} 
+                    disabled={activePage === Math.ceil(tasks.filter(task => task.status === 'active').length / 10)}
+                    onClick={() => setActivePage(activePage + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -539,9 +593,66 @@ const Dashboard = () => {
                 Schedule Stream
               </button>
             </form>
-            <div className={styles.scheduledList}>
+            
+            <div className={styles.tableContainer}>
               <h3>Scheduled Streams</h3>
-              <p>No scheduled streams found.</p>
+              <table className={styles.dataTable}>
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Hours</th>
+                    <th>Stream Key</th>
+                    <th>Scheduled Start</th>
+                    <th>Scheduled End</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks
+                    .filter(task => task.status === 'scheduled')
+                    .slice((schedulePage - 1) * 10, schedulePage * 10)
+                    .map(task => (
+                      <tr key={task.id}>
+                        <td>{task.title}</td>
+                        <td>{task.hours} hours</td>
+                        <td>{task.streamKey}</td>
+                        <td>{task.scheduledStartTime ? new Date(task.scheduledStartTime).toLocaleString() : 'N/A'}</td>
+                        <td>{task.scheduledEndTime ? new Date(task.scheduledEndTime).toLocaleString() : 'N/A'}</td>
+                        <td>
+                          <button className={styles.actionButton}>Edit</button>
+                          <button className={styles.actionButton}>Cancel</button>
+                        </td>
+                      </tr>
+                    ))}
+                  {!tasks.filter(task => task.status === 'scheduled').length && (
+                    <tr>
+                      <td colSpan="6" className={styles.emptyMessage}>No scheduled streams found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              
+              {tasks.filter(task => task.status === 'scheduled').length > 0 && (
+                <div className={styles.pagination}>
+                  <button 
+                    className={styles.paginationButton} 
+                    disabled={schedulePage === 1}
+                    onClick={() => setSchedulePage(schedulePage - 1)}
+                  >
+                    Previous
+                  </button>
+                  <span className={styles.pageInfo}>
+                    Page {schedulePage} of {Math.ceil(tasks.filter(task => task.status === 'scheduled').length / 10)}
+                  </span>
+                  <button 
+                    className={styles.paginationButton} 
+                    disabled={schedulePage === Math.ceil(tasks.filter(task => task.status === 'scheduled').length / 10)}
+                    onClick={() => setSchedulePage(schedulePage + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -549,27 +660,63 @@ const Dashboard = () => {
         {activeTab === 'previous-live' && (
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Previous Live Streams</h2>
-            <div className={styles.taskList}>
-              {tasks
-                .filter(task => task.status === 'completed')
-                .map(task => (
-                  <div key={task.id} className={styles.taskCard}>
-                    <h3>{task.title}</h3>
-                    <p>Duration: {task.hours} hours</p>
-                    <p>Key: {task.key}</p>
-                    {task.videoUrl && (
-                      <video width="100%" controls>
-                        <source src={task.videoUrl} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    )}
-                    <span className={styles.status}>{task.status}</span>
-                    <p className={styles.timestamp}>Streamed on: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Recently'}</p>
-                    <button className={styles.restartButton}>Restart Stream</button>
-                  </div>
-                ))}
-              {!tasks.filter(task => task.status === 'completed').length && (
-                <p>No previous streams found.</p>
+            <div className={styles.tableContainer}>
+              <table className={styles.dataTable}>
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Duration</th>
+                    <th>Stream Key</th>
+                    <th>Status</th>
+                    <th>Stream Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks
+                    .filter(task => task.status === 'completed')
+                    .slice((previousPage - 1) * 10, previousPage * 10)
+                    .map(task => (
+                      <tr key={task.id}>
+                        <td>{task.title}</td>
+                        <td>{task.hours} hours</td>
+                        <td>{task.streamKey}</td>
+                        <td><span className={styles.statusBadge}>{task.status}</span></td>
+                        <td>{task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Recently'}</td>
+                        <td>
+                          <button className={styles.actionButton}>Restart</button>
+                          <button className={styles.actionButton}>View</button>
+                        </td>
+                      </tr>
+                    ))}
+                  {!tasks.filter(task => task.status === 'completed').length && (
+                    <tr>
+                      <td colSpan="6" className={styles.emptyMessage}>No previous streams found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              
+              {tasks.filter(task => task.status === 'completed').length > 0 && (
+                <div className={styles.pagination}>
+                  <button 
+                    className={styles.paginationButton} 
+                    disabled={previousPage === 1}
+                    onClick={() => setPreviousPage(previousPage - 1)}
+                  >
+                    Previous
+                  </button>
+                  <span className={styles.pageInfo}>
+                    Page {previousPage} of {Math.ceil(tasks.filter(task => task.status === 'completed').length / 10)}
+                  </span>
+                  <button 
+                    className={styles.paginationButton} 
+                    disabled={previousPage === Math.ceil(tasks.filter(task => task.status === 'completed').length / 10)}
+                    onClick={() => setPreviousPage(previousPage + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -592,8 +739,65 @@ const Dashboard = () => {
             </div>
             <div className={styles.transactionHistory}>
               <h3>Transaction History</h3>
-              <div className={styles.transactionList}>
-                <p>No transaction history found.</p>
+              <div className={styles.tableContainer}>
+                <table className={styles.dataTable}>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Transaction ID</th>
+                      <th>Description</th>
+                      <th>Amount</th>
+                      <th>Type</th>
+                      <th>Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.length > 0 ? (
+                      transactions
+                        .slice((walletPage - 1) * 10, walletPage * 10)
+                        .map((transaction, index) => (
+                          <tr key={transaction.id || index}>
+                            <td>{transaction.date ? new Date(transaction.date).toLocaleString() : '-'}</td>
+                            <td>{transaction.id || `TRX-${index+1000}`}</td>
+                            <td>{transaction.description || 'Credit transaction'}</td>
+                            <td>{transaction.amount || '0'} credits</td>
+                            <td>
+                              <span className={`${styles.statusBadge} ${transaction.type === 'credit' ? styles.statusCredit : styles.statusDebit}`}>
+                                {transaction.type || 'credit'}
+                              </span>
+                            </td>
+                            <td>{transaction.balance || creditBalance} credits</td>
+                          </tr>
+                        ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className={styles.emptyMessage}>No transaction history found.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                
+                {transactions.length > 0 && (
+                  <div className={styles.pagination}>
+                    <button 
+                      className={styles.paginationButton} 
+                      disabled={walletPage === 1}
+                      onClick={() => setWalletPage(walletPage - 1)}
+                    >
+                      Previous
+                    </button>
+                    <span className={styles.pageInfo}>
+                      Page {walletPage} of {Math.ceil(transactions.length / 10)}
+                    </span>
+                    <button 
+                      className={styles.paginationButton} 
+                      disabled={walletPage === Math.ceil(transactions.length / 10)}
+                      onClick={() => setWalletPage(walletPage + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
