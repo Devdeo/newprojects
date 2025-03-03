@@ -153,6 +153,25 @@
 .formGroup input[type="text"],
 .formGroup input[type="email"] {
   width: 100%;
+
+.borderedTable {
+  border: 1px solid #e2e8f0;
+}
+
+.borderedTable th,
+.borderedTable td {
+  border: 1px solid #e2e8f0;
+}
+
+.liveNowButton {
+  background-color: #ff0000;
+  margin-right: 5px;
+}
+
+.liveNowButton:hover {
+  background-color: #cc0000;
+}
+
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;

@@ -495,7 +495,7 @@ const Dashboard = () => {
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
             <div className={styles.tableContainer}>
-              <table className={styles.dataTable}>
+              <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
                   <tr>
                     <th>Title</th>
@@ -503,7 +503,6 @@ const Dashboard = () => {
                     <th>Stream Key</th>
                     <th>Status</th>
                     <th>Start Time</th>
-                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -517,15 +516,11 @@ const Dashboard = () => {
                         <td>{task.streamKey}</td>
                         <td><span className={styles.statusBadge}>{task.status}</span></td>
                         <td>{task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</td>
-                        <td>
-                          <button className={styles.actionButton}>Stop</button>
-                          <button className={styles.actionButton}>View</button>
-                        </td>
                       </tr>
                     ))}
                   {!tasks.filter(task => task.status === 'active').length && (
                     <tr>
-                      <td colSpan="6" className={styles.emptyMessage}>No active streams found.</td>
+                      <td colSpan="5" className={styles.emptyMessage}>No active streams found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -619,6 +614,7 @@ const Dashboard = () => {
                         <td>{task.scheduledStartTime ? new Date(task.scheduledStartTime).toLocaleString() : 'N/A'}</td>
                         <td>{task.scheduledEndTime ? new Date(task.scheduledEndTime).toLocaleString() : 'N/A'}</td>
                         <td>
+                          <button className={`${styles.actionButton} ${styles.liveNowButton}`}>Live Now</button>
                           <button className={styles.actionButton}>Edit</button>
                           <button className={styles.actionButton}>Cancel</button>
                         </td>
