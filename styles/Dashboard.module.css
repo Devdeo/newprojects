@@ -482,6 +482,36 @@
   color: #1e293b;
 }
 
+.labelWithInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.infoButton {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #4C51BF;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.infoButton:hover {
+  background-color: #434190;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .verifyButton {
   background-color: #34d399;
   margin-top: 5px;

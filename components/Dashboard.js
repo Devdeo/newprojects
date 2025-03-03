@@ -394,7 +394,18 @@ const Dashboard = () => {
               </div>
               
               <div className={styles.formGroup}>
-                <label>Stream Key</label>
+                <div className={styles.labelWithInfo}>
+                  <label>Stream Key</label>
+                  <button 
+                    type="button"
+                    className={styles.infoButton}
+                    onClick={() => {
+                      alert('Stream Key Information:\n\n• A stream key is a unique identifier that connects your broadcast software to your streaming platform.\n\n• You can find your stream key in your YouTube Studio dashboard under "Stream" settings.\n\n• Never share your stream key publicly as it gives access to stream on your channel.\n\n• If you believe your key is compromised, you can reset it in your streaming platform settings.');
+                    }}
+                  >
+                    <span>i</span>
+                  </button>
+                </div>
                 <input
                   type="text"
                   placeholder={isFileUploaded ? "YouTube Stream Key" : "Upload a video file first"}
