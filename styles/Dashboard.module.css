@@ -2,7 +2,8 @@
   display: flex;
   min-height: 100vh;
   margin-top: 64px;
-  background-color: #0f0f0f;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
 .statsBar {
@@ -295,6 +296,8 @@
   padding: 32px;
   max-width: 1200px;
   margin: 0 auto;
+  color: #333;
+  background-color: #f8f9fa;
 }
 
 .taskForm {
