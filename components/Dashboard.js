@@ -590,8 +590,8 @@ const Dashboard = () => {
             </form>
             
             <div className={styles.tableContainer}>
-              <h3>Scheduled Streams</h3>
-              <table className={styles.dataTable}>
+              <h3>Created Schedule Streams</h3>
+              <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
                   <tr>
                     <th>Title</th>
