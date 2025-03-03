@@ -7,7 +7,7 @@ import { collection, addDoc, doc, getDoc, serverTimestamp } from 'firebase/fires
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const Dashboard = () => {
-  const [activeTab, setActiveTab] = useState('active-tasks');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [creditBalance, setCreditBalance] = useState(0);
   const [menuVisible, setMenuVisible] = useState(true);
   const router = useRouter();
@@ -158,20 +158,44 @@ const Dashboard = () => {
       </button>
       <div className={`${styles.sidebar} ${menuVisible ? styles.visible : styles.hidden}`}>
         <button 
-          className={activeTab === 'active-tasks' ? styles.active : ''} 
-          onClick={() => setActiveTab('active-tasks')}
+          className={activeTab === 'dashboard' ? styles.active : ''} 
+          onClick={() => setActiveTab('dashboard')}
         >
-          Active Tasks
+          Dashboard
         </button>
         <button 
-          className={activeTab === 'previous-tasks' ? styles.active : ''} 
-          onClick={() => setActiveTab('previous-tasks')}
+          className={activeTab === 'create-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('create-live')}
         >
-          Previous Tasks
+          Create Live
         </button>
         <button 
-          className={activeTab === 'settings' ? styles.active : ''} 
-          onClick={() => setActiveTab('settings')}
+          className={activeTab === 'active-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('active-live')}
+        >
+          Active Live
+        </button>
+        <button 
+          className={activeTab === 'schedule-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('schedule-live')}
+        >
+          Schedule Live
+        </button>
+        <button 
+          className={activeTab === 'previous-live' ? styles.active : ''} 
+          onClick={() => setActiveTab('previous-live')}
+        >
+          Previous Live
+        </button>
+        <button 
+          className={activeTab === 'wallet-history' ? styles.active : ''} 
+          onClick={() => setActiveTab('wallet-history')}
+        >
+          Wallet History
+        </button>
+        <button 
+          className={activeTab === 'account-settings' ? styles.active : ''} 
+          onClick={() => setActiveTab('account-settings')}
         >
           Account Settings
         </button>
@@ -218,13 +242,37 @@ const Dashboard = () => {
             </div>
           </>
         )}
-        {activeTab === 'active-tasks' && (
+        {activeTab === 'dashboard' && (
           <div>
-            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Create New Task</h2>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Dashboard Overview</h2>
+            <div className={styles.dashboardSummary}>
+              <div className={styles.summaryCard}>
+                <h3>Active Streams</h3>
+                <p className={styles.summaryNumber}>0</p>
+              </div>
+              <div className={styles.summaryCard}>
+                <h3>Scheduled Streams</h3>
+                <p className={styles.summaryNumber}>0</p>
+              </div>
+              <div className={styles.summaryCard}>
+                <h3>Credit Balance</h3>
+                <p className={styles.summaryNumber}>{creditBalance}</p>
+              </div>
+            </div>
+            <div className={styles.recentActivity}>
+              <h3>Recent Activity</h3>
+              <p>No recent activity to display.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'create-live' && (
+          <div>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Create New Live Stream</h2>
             <form onSubmit={handleCreateTask} className={styles.taskForm}>
               <input
                 type="text"
-                placeholder="Task Title"
+                placeholder="Stream Title"
                 value={newTask.title}
                 onChange={(e) => setNewTask({...newTask, title: e.target.value})}
                 required
@@ -239,7 +287,7 @@ const Dashboard = () => {
               />
               <input
                 type="text"
-                placeholder="Key"
+                placeholder="Stream Key"
                 value={newTask.key}
                 onChange={(e) => setNewTask({...newTask, key: e.target.value})}
                 required
@@ -251,7 +299,7 @@ const Dashboard = () => {
                 required
               />
               <button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Task'}
+                {loading ? 'Creating...' : 'Create Live Stream'}
               </button>
               {uploadStatus && (
                 <div className={styles.uploadStatus}>
@@ -276,33 +324,15 @@ const Dashboard = () => {
                 </div>
               )}
             </form>
-
-            <div className={styles.taskList}>
-              {tasks.map(task => (
-                <div key={task.id} className={styles.taskCard}>
-                  <h3>{task.title}</h3>
-                  <p>Hours: {task.hours}</p>
-                  <p>Key: {task.key}</p>
-                  {task.videoUrl && (
-                    <video width="100%" controls>
-                      <source src={task.videoUrl} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  )}
-                  <span className={styles.status}>{task.status}</span>
-                  <p className={styles.timestamp}>Created: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</p>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
-        {activeTab === 'previous-tasks' && (
+        {activeTab === 'active-live' && (
           <div>
-            <h2>Previous Tasks</h2>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
             <div className={styles.taskList}>
               {tasks
-                .filter(task => task.status === 'completed')
+                .filter(task => task.status === 'active')
                 .map(task => (
                   <div key={task.id} className={styles.taskCard}>
                     <h3>{task.title}</h3>
@@ -315,17 +345,148 @@ const Dashboard = () => {
                       </video>
                     )}
                     <span className={styles.status}>{task.status}</span>
-                    <p className={styles.timestamp}>Created: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</p>
+                    <p className={styles.timestamp}>Started: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</p>
+                    <button className={styles.stopButton}>Stop Stream</button>
                   </div>
                 ))}
+              {!tasks.filter(task => task.status === 'active').length && (
+                <p>No active streams found.</p>
+              )}
             </div>
           </div>
         )}
 
-        {activeTab === 'settings' && (
+        {activeTab === 'schedule-live' && (
           <div>
-            <h2>Account Settings</h2>
-            <p>Manage your account settings and preferences here.</p>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Schedule Live Stream</h2>
+            <form className={styles.taskForm}>
+              <input
+                type="text"
+                placeholder="Stream Title"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Hours Required"
+                required
+                min="1"
+              />
+              <input
+                type="text"
+                placeholder="Stream Key"
+                required
+              />
+              <input
+                type="file"
+                accept="video/*"
+                required
+              />
+              <div className={styles.scheduleFields}>
+                <label>Start Date and Time</label>
+                <input type="datetime-local" required />
+              </div>
+              <button type="submit">
+                Schedule Stream
+              </button>
+            </form>
+            <div className={styles.scheduledList}>
+              <h3>Scheduled Streams</h3>
+              <p>No scheduled streams found.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'previous-live' && (
+          <div>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Previous Live Streams</h2>
+            <div className={styles.taskList}>
+              {tasks
+                .filter(task => task.status === 'completed')
+                .map(task => (
+                  <div key={task.id} className={styles.taskCard}>
+                    <h3>{task.title}</h3>
+                    <p>Duration: {task.hours} hours</p>
+                    <p>Key: {task.key}</p>
+                    {task.videoUrl && (
+                      <video width="100%" controls>
+                        <source src={task.videoUrl} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )}
+                    <span className={styles.status}>{task.status}</span>
+                    <p className={styles.timestamp}>Streamed on: {task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Recently'}</p>
+                    <button className={styles.restartButton}>Restart Stream</button>
+                  </div>
+                ))}
+              {!tasks.filter(task => task.status === 'completed').length && (
+                <p>No previous streams found.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'wallet-history' && (
+          <div>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Wallet History</h2>
+            <div className={styles.walletSummary}>
+              <div className={styles.walletBalance}>
+                <h3>Current Balance</h3>
+                <p className={styles.balanceAmount}>{creditBalance} credits</p>
+                <button 
+                  className={styles.addCreditButton}
+                  onClick={() => router.push('/pricing#credit')}
+                >
+                  Add Credits
+                </button>
+              </div>
+            </div>
+            <div className={styles.transactionHistory}>
+              <h3>Transaction History</h3>
+              <div className={styles.transactionList}>
+                <p>No transaction history found.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'account-settings' && (
+          <div>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Account Settings</h2>
+            <form className={styles.settingsForm}>
+              <div className={styles.formGroup}>
+                <label>Display Name</label>
+                <input 
+                  type="text" 
+                  defaultValue={userInfo.name} 
+                  placeholder="Your Name"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>Email</label>
+                <input 
+                  type="email" 
+                  defaultValue={userInfo.email} 
+                  disabled
+                />
+                <small>Email cannot be changed</small>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Password</label>
+                <button type="button" className={styles.changePasswordBtn}>
+                  Change Password
+                </button>
+              </div>
+              <div className={styles.formGroup}>
+                <label>Notification Preferences</label>
+                <div className={styles.checkboxGroup}>
+                  <input type="checkbox" id="emailNotifications" />
+                  <label htmlFor="emailNotifications">Email Notifications</label>
+                </div>
+              </div>
+              <button type="submit" className={styles.saveSettingsBtn}>
+                Save Changes
+              </button>
+            </form>
           </div>
         )}
       </div>
