@@ -673,53 +673,7 @@ const Dashboard = () => {
         {activeTab === 'schedule-live' && (
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Schedule Live Stream</h2>
-            <form className={styles.taskForm}>
-              <input
-                type="text"
-                placeholder="Stream Title"
-                required
-              />
-              <div className={styles.formGroup}>
-                <label>Stream Duration</label>
-                <input
-                  type="number"
-                  placeholder="Hours"
-                  required
-                  min="1"
-                />
-                <small>Enter the number of hours your stream will run</small>
-              </div>
-              <div className={styles.formGroup}>
-                <label>Upload Video File</label>
-                <input
-                  type="file"
-                  accept="video/*"
-                  required
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Stream Key</label>
-                <input
-                  type="text"
-                  placeholder="YouTube Stream Key"
-                  required
-                />
-              </div>
-              <div className={styles.scheduleFields}>
-                <label>Start Date and Time</label>
-                <input type="datetime-local" required />
-              </div>
-              <div className={styles.scheduleFields}>
-                <label>End Date and Time</label>
-                <input type="datetime-local" required />
-              </div>
-              <button type="submit" className={styles.submitButton}>
-                Schedule Stream
-              </button>
-            </form>
-
             <div className={styles.tableContainer}>
-              <h3>Scheduled Streams</h3>
               <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
                   <tr>
