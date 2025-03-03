@@ -511,12 +511,16 @@ const Dashboard = () => {
                 placeholder="Stream Title"
                 required
               />
-              <input
-                type="number"
-                placeholder="Hours Required"
-                required
-                min="1"
-              />
+              <div className={styles.formGroup}>
+                <label>Stream Duration</label>
+                <input
+                  type="number"
+                  placeholder="Hours"
+                  required
+                  min="1"
+                />
+                <small>Enter the number of hours your stream will run</small>
+              </div>
               <input
                 type="text"
                 placeholder="Stream Key"
