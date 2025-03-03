@@ -59,6 +59,13 @@ const Dashboard = () => {
   const handleVideoChange = (e) => {
     if (e.target.files[0]) {
       setVideoFile(e.target.files[0]);
+      
+      // If stream key is empty, suggest a random one
+      if (!newTask.key) {
+        const randomKey = 'sk_' + Math.random().toString(36).substring(2, 12);
+        setNewTask({...newTask, key: randomKey});
+        alert('A random stream key has been generated. You can modify it if needed.');
+      }
     }
   };
 
@@ -344,7 +351,20 @@ const Dashboard = () => {
                 <button 
                   type="button" 
                   className={styles.verifyButton}
-                  onClick={() => alert('Stream key verified!')}
+                  onClick={() => {
+                    if (!newTask.key) {
+                      alert('Please enter a stream key first');
+                      return;
+                    }
+                    
+                    // In a real application, you would verify with YouTube API
+                    // For now, we'll just do a basic validation
+                    if (newTask.key.length < 8) {
+                      alert('Stream key is too short. Please enter a valid key.');
+                    } else {
+                      alert('Stream key format verified! In a production environment, this would validate with YouTube.');
+                    }
+                  }}
                 >
                   Verify Key
                 </button>
@@ -422,16 +442,24 @@ const Dashboard = () => {
               {uploadStatus && (
                 <div className={styles.uploadStatus}>
                   {uploadStatus === 'uploading' && (
-                    <div className={styles.progressBar}>
-                      <div 
-                        className={styles.progressFill} 
-                        style={{width: `${uploadProgress}%`}}
-                      ></div>
-                    </div>
+                    <>
+                      <div className={styles.progressBar}>
+                        <div 
+                          className={styles.progressFill} 
+                          style={{width: `${uploadProgress}%`}}
+                        ></div>
+                      </div>
+                      <p className={styles.uploadingMessage}>
+                        Uploading video... {uploadProgress}% complete. 
+                        {videoFile && <span>File: {videoFile.name}</span>}
+                      </p>
+                    </>
                   )}
                   {uploadStatus === 'success' && (
                     <div className={styles.successMessage}>
-                      {newTask.scheduleType === 'schedule' ? 'Stream scheduled successfully!' : 'Stream started successfully!'}
+                      {newTask.scheduleType === 'schedule' 
+                        ? `Stream scheduled successfully! Using key: ${newTask.key}` 
+                        : `Stream started successfully! Using key: ${newTask.key}`}
                     </div>
                   )}
                   {uploadStatus === 'error' && (
