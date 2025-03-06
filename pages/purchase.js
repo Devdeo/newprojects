@@ -3,16 +3,19 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
 import Navbar from '../components/Navbar';
 import styles from '../styles/Page.module.css';
+
+// Initialize Stripe
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const PurchasePage = () => {
   const router = useRouter();
   const { quantity } = router.query;
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const paypalButtonRef = useRef(null);
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [cardDetails, setCardDetails] = useState({
     name: '',
@@ -39,66 +42,7 @@ const PurchasePage = () => {
     } else {
       setErrorMessage('');
     }
-    
-    const loadPayPalScript = () => {
-      // Load the PayPal script
-      const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`;
-      script.async = true;
-      script.onload = () => initializePayPalButton();
-      document.body.appendChild(script);
-    };
-
-    const initializePayPalButton = () => {
-      if (paypalButtonRef.current && window.paypal) {
-        // Clear any existing buttons
-        paypalButtonRef.current.innerHTML = '';
-        
-        // Only enable PayPal if minimum amount is met
-        if (parseInt(quantity || 1) >= MIN_CREDITS) {
-          window.paypal.Buttons({
-            style: {
-              color: 'blue',
-              shape: 'pill',
-              label: 'pay'
-            },
-            createOrder: (data, actions) => {
-              const amount = (quantity || MIN_CREDITS) * CREDIT_PRICE;
-              return actions.order.create({
-                purchase_units: [{
-                  amount: {
-                    value: amount.toFixed(2),
-                    currency_code: 'USD'
-                  },
-                  description: `Purchase ${quantity || MIN_CREDITS} credits`
-                }]
-              });
-            },
-            onApprove: (data, actions) => {
-              return actions.order.capture().then(function(details) {
-                alert("Payment Successful! Thank you for your purchase.");
-                router.push('/dashboard');
-              });
-            },
-            onError: (err) => {
-              console.error('Payment error:', err);
-              alert('Payment failed. Please try again.');
-            }
-          }).render(paypalButtonRef.current);
-        } else {
-          const errorDiv = document.createElement('div');
-          errorDiv.className = styles.paypalError;
-          errorDiv.textContent = `Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`;
-          paypalButtonRef.current.appendChild(errorDiv);
-        }
-      }
-    };
-
-    // Check if quantity is available (router query might not be available immediately)
-    if (quantity) {
-      loadPayPalScript();
-    }
-  }, [quantity, router]);
+  }, [quantity]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -123,7 +67,49 @@ const PurchasePage = () => {
     checkAuth();
   }, []);
 
-  const handleSubmitPayment = (e) => {
+  const createCheckoutSession = async () => {
+    try {
+      setPaymentLoading(true);
+      
+      // Fetch checkout session from your server
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          quantity: parseInt(quantity || MIN_CREDITS),
+          unitPrice: CREDIT_PRICE,
+          paymentMethod: paymentMethod,
+        }),
+      });
+      
+      const session = await response.json();
+      
+      if (session.error) {
+        alert(session.error);
+        setPaymentLoading(false);
+        return;
+      }
+      
+      // Redirect to Stripe Checkout
+      const stripe = await stripePromise;
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+      
+      if (error) {
+        alert(error.message);
+        setPaymentLoading(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleSubmitPayment = async (e) => {
     e.preventDefault();
     
     // Check minimum purchase amount
@@ -132,14 +118,29 @@ const PurchasePage = () => {
       return;
     }
     
-    setPaymentLoading(true);
+    // For demonstration, different payment methods can be handled here
+    if (paymentMethod === 'card') {
+      // Validate card details
+      if (!cardDetails.name || !cardDetails.number || !cardDetails.expiry || !cardDetails.cvv) {
+        alert('Please fill in all card details');
+        return;
+      }
+    } else if (paymentMethod === 'upi') {
+      // Validate UPI ID
+      if (!upiId) {
+        alert('Please enter your UPI ID');
+        return;
+      }
+    } else if (paymentMethod === 'netbanking') {
+      // Validate bank details
+      if (!bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.ifsc) {
+        alert('Please fill in all bank details');
+        return;
+      }
+    }
     
-    // Simulate payment processing
-    setTimeout(() => {
-      setPaymentLoading(false);
-      alert("Payment Successful! Thank you for your purchase.");
-      router.push('/dashboard');
-    }, 2000);
+    // Create Stripe checkout session
+    await createCheckoutSession();
   };
 
   const renderPaymentForm = () => {
@@ -299,12 +300,6 @@ const PurchasePage = () => {
             </button>
           </form>
         );
-      case 'paypal':
-        return (
-          <div className={styles.paypalContainer}>
-            <div ref={paypalButtonRef} className={styles.paypalButtonContainer}></div>
-          </div>
-        );
       default:
         return null;
     }
@@ -366,13 +361,6 @@ const PurchasePage = () => {
                     type="button"
                   >
                     Net Banking
-                  </button>
-                  <button 
-                    className={`${styles.methodButton} ${paymentMethod === 'paypal' ? styles.methodButtonActive : ''}`}
-                    onClick={() => setPaymentMethod('paypal')}
-                    type="button"
-                  >
-                    PayPal
                   </button>
                 </div>
               </div>
