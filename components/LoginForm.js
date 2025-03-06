@@ -61,10 +61,21 @@ const LoginForm = ({ onClose }) => {
     setIsLoading(true);
 
     try {
-      if (!isLogin && credentials.password !== credentials.confirmPassword) {
-        setError('Passwords do not match');
-        setIsLoading(false);
-        return;
+      if (!isLogin) {
+        // Check if passwords match for signup
+        if (credentials.password !== credentials.confirmPassword) {
+          setError('Passwords do not match');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Check if terms are agreed for signup
+        const termsCheckbox = document.getElementById('termsCheckbox');
+        if (!termsCheckbox?.checked) {
+          setError('You must agree to the Terms and Conditions');
+          setIsLoading(false);
+          return;
+        }
       }
       if (isLogin) {
         await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
@@ -198,15 +209,27 @@ const LoginForm = ({ onClose }) => {
             </div>
           )}
           {!isLogin && !isForgotPassword && (
-            <div className={styles.formGroup}>
-              <input
-                type="password"
-                placeholder="Confirm Password"
-                value={credentials.confirmPassword}
-                onChange={(e) => setCredentials({...credentials, confirmPassword: e.target.value})}
-                required
-              />
-            </div>
+            <>
+              <div className={styles.formGroup}>
+                <input
+                  type="password"
+                  placeholder="Confirm Password"
+                  value={credentials.confirmPassword}
+                  onChange={(e) => setCredentials({...credentials, confirmPassword: e.target.value})}
+                  required
+                />
+              </div>
+              <div className={styles.termsCheckbox}>
+                <input
+                  type="checkbox"
+                  id="termsCheckbox"
+                  required
+                />
+                <label htmlFor="termsCheckbox">
+                  I agree to the <a href="/terms" target="_blank">Terms and Conditions</a>
+                </label>
+              </div>
+            </>
           )}
           <button type="submit" className={styles.submitButton} disabled={isLoading}>
             {isLoading ? 'Loading...' : (isForgotPassword ? 'Reset Password' : (isLogin ? 'Login' : 'Sign Up'))}
