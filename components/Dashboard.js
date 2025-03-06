@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth } from '../firebase/config';
@@ -13,6 +13,24 @@ const Dashboard = () => {
   const router = useRouter();
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const sidebarRef = useRef(null);
+  
+  // Handle click outside the sidebar to close menu in mobile view
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (window.innerWidth <= 768 && 
+          sidebarRef.current && 
+          !sidebarRef.current.contains(event.target) &&
+          !event.target.classList.contains(styles.menuToggle)) {
+        setMenuVisible(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   const [userInfo, setUserInfo] = useState({ name: '', email: '' });
   const [newTask, setNewTask] = useState({
     title: '',
@@ -310,7 +328,7 @@ const Dashboard = () => {
       >
         {menuVisible ? '✕' : '☰'}
       </button>
-      <div className={`${styles.sidebar} ${menuVisible ? styles.visible : styles.hidden}`}>
+      <div ref={sidebarRef} className={`${styles.sidebar} ${menuVisible ? styles.visible : styles.hidden}`}>
         <button 
           className={activeTab === 'dashboard' ? styles.active : ''} 
           onClick={() => setActiveTab('dashboard')}
