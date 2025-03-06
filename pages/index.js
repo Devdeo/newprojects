@@ -102,7 +102,7 @@ const Home = () => {
             </div>
             <div className={styles.pricingCard}>
               <h3>Credit</h3>
-              <div className={styles.price}>$2/credit</div>
+              <div className={styles.price}>$0.50/credit</div>
               <ul>
                 <li>1 Hour Processing</li>
                 <li>250MB File Size</li>

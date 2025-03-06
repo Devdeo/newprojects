@@ -94,11 +94,11 @@ const PurchasePage = () => {
               </div>
               <div className={styles.detailRow}>
                 <span>Price per credit</span>
-                <span>$2.00</span>
+                <span>$0.50</span>
               </div>
               <div className={styles.detailRow}>
                 <span>Total amount</span>
-                <span className={styles.total}>${(quantity || 1) * 2}.00</span>
+                <span className={styles.total}>${(quantity || 1) * 0.5}.00</span>
               </div>
               <button 
                 className={styles.payButton}

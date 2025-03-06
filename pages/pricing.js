@@ -27,7 +27,7 @@ const PricingPage = () => {
           />
           <PricingCard 
             title="Credit" 
-            price="2" 
+            price="0.50" 
             features={['1 Hour Processing', '250MB File Size', 'Priority Support', 'Per Credit']}
           />
         </div>
