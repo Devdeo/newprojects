@@ -272,6 +272,78 @@
   background-color: #3a57d5;
 }
 
+.paymentForm {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.formGroup input, 
+.formGroup select {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1rem;
+}
+
+.formGroup input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.formRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.formRow .formGroup {
+  flex: 1;
+}
+
+.paymentMethodSelector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.methodButton {
+  padding: 0.6rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.methodButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.methodButtonActive {
+  background: rgba(255, 0, 0, 0.2);
+  border-color: rgba(255, 0, 0, 0.5);
+}
+
+.paypalContainer {
+  margin-top: 1rem;
+  min-height: 150px;
+}
+
 .verificationContainer {
   max-width: 600px;
   margin: 0 auto;

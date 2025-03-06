@@ -13,6 +13,19 @@ const PurchasePage = () => {
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const paypalButtonRef = useRef(null);
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [cardDetails, setCardDetails] = useState({
+    name: '',
+    number: '',
+    expiry: '',
+    cvv: '',
+  });
+  const [upiId, setUpiId] = useState('');
+  const [bankDetails, setBankDetails] = useState({
+    bankName: '',
+    accountNumber: '',
+    ifsc: '',
+  });
 
   useEffect(() => {
     const loadPayPalScript = () => {
@@ -90,6 +103,186 @@ const PurchasePage = () => {
     checkAuth();
   }, []);
 
+  const handleSubmitPayment = (e) => {
+    e.preventDefault();
+    setPaymentLoading(true);
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      setPaymentLoading(false);
+      alert("Payment Successful! Thank you for your purchase.");
+      router.push('/dashboard');
+    }, 2000);
+  };
+
+  const renderPaymentForm = () => {
+    switch(paymentMethod) {
+      case 'card':
+        return (
+          <form onSubmit={handleSubmitPayment} className={styles.paymentForm}>
+            <div className={styles.formGroup}>
+              <label htmlFor="cardName">Cardholder Name</label>
+              <input 
+                type="text" 
+                id="cardName" 
+                value={cardDetails.name}
+                onChange={(e) => setCardDetails({...cardDetails, name: e.target.value})}
+                placeholder="John Doe"
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="cardNumber">Card Number</label>
+              <input 
+                type="text" 
+                id="cardNumber" 
+                value={cardDetails.number}
+                onChange={(e) => setCardDetails({...cardDetails, number: e.target.value})}
+                placeholder="1234 5678 9012 3456"
+                maxLength="19"
+                required
+              />
+            </div>
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label htmlFor="cardExpiry">Expiry Date</label>
+                <input 
+                  type="text" 
+                  id="cardExpiry" 
+                  value={cardDetails.expiry}
+                  onChange={(e) => setCardDetails({...cardDetails, expiry: e.target.value})}
+                  placeholder="MM/YY"
+                  maxLength="5"
+                  required
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="cardCVV">CVV</label>
+                <input 
+                  type="text" 
+                  id="cardCVV" 
+                  value={cardDetails.cvv}
+                  onChange={(e) => setCardDetails({...cardDetails, cvv: e.target.value})}
+                  placeholder="123"
+                  maxLength="4"
+                  required
+                />
+              </div>
+            </div>
+            <button 
+              type="submit" 
+              className={styles.payButton}
+              disabled={paymentLoading}
+            >
+              {paymentLoading ? (
+                <>
+                  <span className={styles.loadingSpinner}></span>
+                  Processing...
+                </>
+              ) : (
+                'Pay Now'
+              )}
+            </button>
+          </form>
+        );
+      case 'upi':
+        return (
+          <form onSubmit={handleSubmitPayment} className={styles.paymentForm}>
+            <div className={styles.formGroup}>
+              <label htmlFor="upiId">UPI ID</label>
+              <input 
+                type="text" 
+                id="upiId" 
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="name@upi"
+                required
+              />
+            </div>
+            <button 
+              type="submit" 
+              className={styles.payButton}
+              disabled={paymentLoading}
+            >
+              {paymentLoading ? (
+                <>
+                  <span className={styles.loadingSpinner}></span>
+                  Processing...
+                </>
+              ) : (
+                'Pay Now'
+              )}
+            </button>
+          </form>
+        );
+      case 'netbanking':
+        return (
+          <form onSubmit={handleSubmitPayment} className={styles.paymentForm}>
+            <div className={styles.formGroup}>
+              <label htmlFor="bankName">Bank Name</label>
+              <select 
+                id="bankName" 
+                value={bankDetails.bankName}
+                onChange={(e) => setBankDetails({...bankDetails, bankName: e.target.value})}
+                required
+              >
+                <option value="">Select Bank</option>
+                <option value="sbi">State Bank of India</option>
+                <option value="hdfc">HDFC Bank</option>
+                <option value="icici">ICICI Bank</option>
+                <option value="axis">Axis Bank</option>
+                <option value="pnb">Punjab National Bank</option>
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="accountNumber">Account Number</label>
+              <input 
+                type="text" 
+                id="accountNumber" 
+                value={bankDetails.accountNumber}
+                onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
+                placeholder="Account Number"
+                required
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label htmlFor="ifsc">IFSC Code</label>
+              <input 
+                type="text" 
+                id="ifsc" 
+                value={bankDetails.ifsc}
+                onChange={(e) => setBankDetails({...bankDetails, ifsc: e.target.value})}
+                placeholder="IFSC Code"
+                required
+              />
+            </div>
+            <button 
+              type="submit" 
+              className={styles.payButton}
+              disabled={paymentLoading}
+            >
+              {paymentLoading ? (
+                <>
+                  <span className={styles.loadingSpinner}></span>
+                  Processing...
+                </>
+              ) : (
+                'Pay Now'
+              )}
+            </button>
+          </form>
+        );
+      case 'paypal':
+        return (
+          <div className={styles.paypalContainer}>
+            <div ref={paypalButtonRef} className={styles.paypalButtonContainer}></div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -119,16 +312,41 @@ const PurchasePage = () => {
               </div>
               
               <div className={styles.paymentOptions}>
-                <h3>Payment Options</h3>
-                <div className={styles.paymentIcons}>
-                  <span>Credit/Debit Cards</span>
-                  <span>Net Banking</span>
-                  <span>UPI</span>
+                <h3>Payment Methods</h3>
+                <div className={styles.paymentMethodSelector}>
+                  <button 
+                    className={`${styles.methodButton} ${paymentMethod === 'card' ? styles.methodButtonActive : ''}`}
+                    onClick={() => setPaymentMethod('card')}
+                    type="button"
+                  >
+                    Credit/Debit Card
+                  </button>
+                  <button 
+                    className={`${styles.methodButton} ${paymentMethod === 'upi' ? styles.methodButtonActive : ''}`}
+                    onClick={() => setPaymentMethod('upi')}
+                    type="button"
+                  >
+                    UPI
+                  </button>
+                  <button 
+                    className={`${styles.methodButton} ${paymentMethod === 'netbanking' ? styles.methodButtonActive : ''}`}
+                    onClick={() => setPaymentMethod('netbanking')}
+                    type="button"
+                  >
+                    Net Banking
+                  </button>
+                  <button 
+                    className={`${styles.methodButton} ${paymentMethod === 'paypal' ? styles.methodButtonActive : ''}`}
+                    onClick={() => setPaymentMethod('paypal')}
+                    type="button"
+                  >
+                    PayPal
+                  </button>
                 </div>
               </div>
               
-              {/* PayPal button container */}
-              <div ref={paypalButtonRef} className={styles.paypalButtonContainer}></div>
+              {/* Payment form based on selected method */}
+              {!loading && renderPaymentForm()}
               
               {loading && (
                 <div className={styles.loadingContainer}>
