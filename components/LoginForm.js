@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, googleProvider, db } from '../firebase/config';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import styles from '../styles/LoginForm.module.css';
 
@@ -45,11 +45,14 @@ const LoginForm = ({ onClose }) => {
     setIsLoading(true);
 
     try {
-      await auth.sendPasswordResetEmail(credentials.email);
+      if (!credentials.email) {
+        throw new Error('Please enter your email address');
+      }
+      await sendPasswordResetEmail(auth, credentials.email);
       setError('Password reset email sent! Check your inbox.');
       setIsForgotPassword(false);
     } catch (error) {
-      setError(error.message);
+      setError(error.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
