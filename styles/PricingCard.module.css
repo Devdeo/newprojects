@@ -92,3 +92,10 @@
   color: #94a3b8;
   font-size: 0.9rem;
 }
+
+.minCreditNotice {
+  margin-top: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
+}

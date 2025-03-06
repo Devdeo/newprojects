@@ -83,13 +83,16 @@ const PricingCard = ({ title, price, features }) => {
       {user && title === "Credit" && (
         <div className={styles.creditControls}>
           <div className={styles.quantityControl}>
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className={styles.quantityButton}>-</button>
-            <span className={styles.quantity}>{quantity}</span>
+            <button onClick={() => setQuantity(Math.max(MIN_CREDITS, quantity - 1))} className={styles.quantityButton}>-</button>
+            <span className={styles.quantity}>{Math.max(MIN_CREDITS, quantity)}</span>
             <button onClick={() => setQuantity(quantity + 1)} className={styles.quantityButton}>+</button>
           </div>
           <button onClick={handleBuyCredits} className={`${styles.button} ${styles.payButton}`}>
-            Buy {quantity} Credit{quantity > 1 ? 's' : ''}
+            Buy {Math.max(MIN_CREDITS, quantity)} Credit{Math.max(MIN_CREDITS, quantity) > 1 ? 's' : ''}
           </button>
+          <div className={styles.minCreditNotice}>
+            Minimum purchase: {MIN_CREDITS} credits (${(MIN_CREDITS * 0.5).toFixed(2)})
+          </div>
         </div>
       )}
       {user && title === "Free" && (
