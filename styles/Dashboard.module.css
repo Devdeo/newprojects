@@ -71,6 +71,12 @@
   display: none;
 }
 
+@media (max-width: 768px) {
+  .menuToggle {
+    display: block;
+  }
+}
+
 .dashboardSummary {
   display: flex;
   justify-content: space-between;
@@ -394,8 +400,10 @@
     position: fixed;
     top: 64px;
     left: 0;
-    height: 100vh;
+    height: calc(100vh - 64px);
     z-index: 999;
+    transition: transform 0.3s ease;
+    width: 240px;
   }
 
   .hidden {
@@ -404,6 +412,11 @@
 
   .visible {
     transform: translateX(0);
+  }
+  
+  .content {
+    width: 100%;
+    padding: 32px 16px;
   }
 }
 

@@ -306,8 +306,9 @@ const Dashboard = () => {
       <button 
         className={styles.menuToggle}
         onClick={() => setMenuVisible(!menuVisible)}
+        aria-label="Toggle menu"
       >
-        ☰
+        {menuVisible ? '✕' : '☰'}
       </button>
       <div className={`${styles.sidebar} ${menuVisible ? styles.visible : styles.hidden}`}>
         <button 
