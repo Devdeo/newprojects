@@ -69,6 +69,7 @@ const PurchasePage = () => {
           quantity: parseInt(quantity || MIN_CREDITS),
           unitPrice: CREDIT_PRICE,
           paymentMethod: paymentMethod,
+          userId: auth.currentUser?.uid || '',
         }),
       });
       

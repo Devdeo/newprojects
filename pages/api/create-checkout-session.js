@@ -44,6 +44,10 @@ export default async function handler(req, res) {
       mode: 'payment',
       success_url: `${req.headers.origin}/dashboard?payment_success=true`,
       cancel_url: `${req.headers.origin}/purchase?quantity=${quantity}`,
+      metadata: {
+        userId: req.body.userId || '',
+        quantity: quantity
+      }
     });
 
     res.status(200).json({ id: session.id });
