@@ -27,7 +27,19 @@ const PurchasePage = () => {
     ifsc: '',
   });
 
+  const [errorMessage, setErrorMessage] = useState('');
+  const MIN_PURCHASE_AMOUNT = 10; // $10 minimum purchase
+  const CREDIT_PRICE = 0.5; // $0.50 per credit
+  const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 20 credits
+
   useEffect(() => {
+    // Validate minimum purchase amount when quantity changes
+    if (quantity && parseInt(quantity) < MIN_CREDITS) {
+      setErrorMessage(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
+    } else {
+      setErrorMessage('');
+    }
+    
     const loadPayPalScript = () => {
       // Load the PayPal script
       const script = document.createElement('script');
@@ -42,35 +54,43 @@ const PurchasePage = () => {
         // Clear any existing buttons
         paypalButtonRef.current.innerHTML = '';
         
-        window.paypal.Buttons({
-          style: {
-            color: 'blue',
-            shape: 'pill',
-            label: 'pay'
-          },
-          createOrder: (data, actions) => {
-            const amount = (quantity || 1) * 0.5;
-            return actions.order.create({
-              purchase_units: [{
-                amount: {
-                  value: amount.toFixed(2),
-                  currency_code: 'USD'
-                },
-                description: `Purchase ${quantity || 1} credits`
-              }]
-            });
-          },
-          onApprove: (data, actions) => {
-            return actions.order.capture().then(function(details) {
-              alert("Payment Successful! Thank you for your purchase.");
-              router.push('/dashboard');
-            });
-          },
-          onError: (err) => {
-            console.error('Payment error:', err);
-            alert('Payment failed. Please try again.');
-          }
-        }).render(paypalButtonRef.current);
+        // Only enable PayPal if minimum amount is met
+        if (parseInt(quantity || 1) >= MIN_CREDITS) {
+          window.paypal.Buttons({
+            style: {
+              color: 'blue',
+              shape: 'pill',
+              label: 'pay'
+            },
+            createOrder: (data, actions) => {
+              const amount = (quantity || MIN_CREDITS) * CREDIT_PRICE;
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: amount.toFixed(2),
+                    currency_code: 'USD'
+                  },
+                  description: `Purchase ${quantity || MIN_CREDITS} credits`
+                }]
+              });
+            },
+            onApprove: (data, actions) => {
+              return actions.order.capture().then(function(details) {
+                alert("Payment Successful! Thank you for your purchase.");
+                router.push('/dashboard');
+              });
+            },
+            onError: (err) => {
+              console.error('Payment error:', err);
+              alert('Payment failed. Please try again.');
+            }
+          }).render(paypalButtonRef.current);
+        } else {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = styles.paypalError;
+          errorDiv.textContent = `Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`;
+          paypalButtonRef.current.appendChild(errorDiv);
+        }
       }
     };
 
@@ -105,6 +125,13 @@ const PurchasePage = () => {
 
   const handleSubmitPayment = (e) => {
     e.preventDefault();
+    
+    // Check minimum purchase amount
+    if (parseInt(quantity || 1) < MIN_CREDITS) {
+      alert(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
+      return;
+    }
+    
     setPaymentLoading(true);
     
     // Simulate payment processing
@@ -300,16 +327,21 @@ const PurchasePage = () => {
             <div className={styles.purchaseDetails}>
               <div className={styles.detailRow}>
                 <span>Quantity</span>
-                <span>{quantity || 1} credit(s)</span>
+                <span>{quantity || MIN_CREDITS} credit(s)</span>
               </div>
               <div className={styles.detailRow}>
                 <span>Price per credit</span>
-                <span>$0.50</span>
+                <span>${CREDIT_PRICE.toFixed(2)}</span>
               </div>
               <div className={styles.detailRow}>
                 <span>Total amount</span>
-                <span className={styles.total}>${(quantity || 1) * 0.5}.00</span>
+                <span className={styles.total}>${((quantity || MIN_CREDITS) * CREDIT_PRICE).toFixed(2)}</span>
               </div>
+              {errorMessage && (
+                <div className={styles.errorMessage}>
+                  {errorMessage}
+                </div>
+              )}
               
               <div className={styles.paymentOptions}>
                 <h3>Payment Methods</h3>

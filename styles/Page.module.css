@@ -153,6 +153,28 @@
   gap: 1.5rem;
 }
 
+.errorMessage {
+  background-color: rgba(255, 0, 0, 0.15);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6b6b;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  margin-top: -0.5rem;
+}
+
+.paypalError {
+  background-color: rgba(255, 0, 0, 0.15);
+  border: 1px solid rgba(255, 0, 0, 0.3);
+  color: #ff6b6b;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
 .detailRow {
   display: flex;
   justify-content: space-between;

@@ -20,6 +20,8 @@ const PricingCard = ({ title, price, features }) => {
     return () => unsubscribe();
   }, []);
 
+  const MIN_CREDITS = 20; // Minimum $10 purchase at $0.50 per credit
+  
   const handleBuyCredits = async () => {
     if (!user) {
       setShowLogin(true);
@@ -32,7 +34,9 @@ const PricingCard = ({ title, price, features }) => {
     }
 
     try {
-      router.push(`/purchase?quantity=${quantity}`);
+      // Ensure minimum purchase quantity
+      const purchaseQuantity = Math.max(quantity, MIN_CREDITS);
+      router.push(`/purchase?quantity=${purchaseQuantity}`);
     } catch (error) {
       console.error('Error navigating to purchase:', error);
       alert('Failed to proceed to purchase. Please try again.');
