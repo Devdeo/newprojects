@@ -2,8 +2,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, googleProvider, db } from '../firebase/config';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  sendPasswordResetEmail,
+  sendEmailVerification
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import styles from '../styles/LoginForm.module.css';
 
 const LoginForm = ({ onClose }) => {
@@ -29,10 +35,14 @@ const LoginForm = ({ onClose }) => {
           email: user.email,
           name: additionalData.name || user.displayName || '',
           authProvider: additionalData.authProvider || 'email',
+          emailVerified: user.emailVerified,
           creditBalance: 0,
           createdAt: new Date().toISOString(),
           ...additionalData
         });
+      } else if (user.emailVerified) {
+        // Update email verification status if user is now verified
+        await updateDoc(userRef, { emailVerified: true });
       }
     } catch (error) {
       console.error('Error saving user data:', error);
@@ -81,13 +91,20 @@ const LoginForm = ({ onClose }) => {
         }
       }
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+        const { user } = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+        if (!user.emailVerified && user.providerData[0].providerId === 'password') {
+          setError('Please verify your email before logging in. Need a new verification email? Check your spam folder or try signing up again.');
+          return;
+        }
+        onClose();
+        router.push('/dashboard');
       } else {
         const { user } = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
-        await saveUserData(user, { name: credentials.name });
+        await saveUserData(user, { name: credentials.name, emailVerified: false });
+        await sendEmailVerification(user);
+        setError('Verification email sent! Please check your inbox and verify your email before logging in.');
+        setIsLogin(true); // Switch to login form after successful signup
       }
-      onClose();
-      router.push('/dashboard');
     } catch (error) {
       // Handle specific error codes with user-friendly messages
       switch (error.code) {

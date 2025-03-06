@@ -26,6 +26,11 @@ const PricingCard = ({ title, price, features }) => {
       return;
     }
 
+    if (!user.emailVerified && user.providerData[0].providerId === 'password') {
+      alert('Please verify your email before making a purchase. Check your inbox for the verification link.');
+      return;
+    }
+
     try {
       router.push(`/purchase?quantity=${quantity}`);
     } catch (error) {
@@ -37,6 +42,11 @@ const PricingCard = ({ title, price, features }) => {
   const handleGetStarted = async () => {
     if (!user) {
       setShowLogin(true);
+      return;
+    }
+
+    if (!user.emailVerified && user.providerData[0].providerId === 'password') {
+      alert('Please verify your email before getting started. Check your inbox for the verification link.');
       return;
     }
 
