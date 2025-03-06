@@ -63,6 +63,7 @@ const LoginForm = ({ onClose }) => {
     try {
       if (!isLogin && credentials.password !== credentials.confirmPassword) {
         setError('Passwords do not match');
+        setIsLoading(false);
         return;
       }
       if (isLogin) {
@@ -74,7 +75,32 @@ const LoginForm = ({ onClose }) => {
       onClose();
       router.push('/dashboard');
     } catch (error) {
-      setError(error.message);
+      // Handle specific error codes with user-friendly messages
+      switch (error.code) {
+        case 'auth/invalid-email':
+          setError('Invalid email address format');
+          break;
+        case 'auth/user-not-found':
+          setError('No account found with this email address');
+          break;
+        case 'auth/wrong-password':
+          setError('Incorrect password');
+          break;
+        case 'auth/weak-password':
+          setError('Password should be at least 6 characters');
+          break;
+        case 'auth/email-already-in-use':
+          setError('This email address is already in use');
+          break;
+        case 'auth/network-request-failed':
+          setError('Network error. Please check your internet connection');
+          break;
+        case 'auth/too-many-requests':
+          setError('Too many unsuccessful login attempts. Please try again later');
+          break;
+        default:
+          setError(error.message || 'An error occurred during authentication');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -92,12 +118,24 @@ const LoginForm = ({ onClose }) => {
       router.push('/dashboard');
     } catch (error) {
       console.error('Google sign-in error:', error);
-      if (error.code === 'auth/unauthorized-domain') {
-        setError('This domain is not authorized. Please contact support.');
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        setError('Sign-in popup was closed. Please try again.');
-      } else {
-        setError(error.message || 'Failed to sign in with Google');
+      switch (error.code) {
+        case 'auth/unauthorized-domain':
+          setError('This domain is not authorized for Google sign-in. Please contact support.');
+          break;
+        case 'auth/popup-closed-by-user':
+          setError('Sign-in popup was closed. Please try again.');
+          break;
+        case 'auth/cancelled-popup-request':
+          setError('Multiple popup requests were made. Please try again.');
+          break;
+        case 'auth/popup-blocked':
+          setError('Pop-up was blocked by your browser. Please enable pop-ups for this site.');
+          break;
+        case 'auth/account-exists-with-different-credential':
+          setError('An account already exists with the same email but different sign-in method.');
+          break;
+        default:
+          setError(error.message || 'Failed to sign in with Google');
       }
     } finally {
       setIsLoading(false);
@@ -109,7 +147,11 @@ const LoginForm = ({ onClose }) => {
       <div className={styles.modal}>
         <button className={styles.closeButton} onClick={onClose}>×</button>
         <h2>{isLogin ? 'Login' : 'Sign Up'}</h2>
-        {error && <p className={styles.error}>{error}</p>}
+        {error && (
+          <div className={styles.errorContainer}>
+            <p className={styles.error}>{error}</p>
+          </div>
+        )}
         <form onSubmit={isForgotPassword ? handleForgotPassword : handleSubmit}>
           {!isLogin && !isForgotPassword && (
             <div className={styles.formGroup}>
