@@ -66,7 +66,17 @@ const PurchasePage = () => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (!user) {
           router.push('/');
+          return;
         }
+        
+        // Check if email verification is required (doesn't apply to OAuth providers)
+        const isEmailProvider = user.providerData[0]?.providerId === 'password';
+        if (isEmailProvider && !user.emailVerified) {
+          router.push('/dashboard');
+          return;
+        }
+        
+        setLoading(false);
       });
       return () => unsubscribe();
     };
