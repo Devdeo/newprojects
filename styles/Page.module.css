@@ -217,6 +217,46 @@
   }
 }
 
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.paymentOptions {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.paymentOptions h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: #e2e8f0;
+}
+
+.paymentIcons {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.paymentIcons span {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #ddd;
+}
+
+.paypalButtonContainer {
+  width: 100%;
+  min-height: 55px;
+}
+
 .purchaseButton {
   padding: 10px 20px;
   background-color: #4b6bfb;

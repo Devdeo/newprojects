@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Navbar from '../components/Navbar';
 import styles from '../styles/Page.module.css';
 
@@ -12,57 +12,64 @@ const PurchasePage = () => {
   const { quantity } = router.query;
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const paypalButtonRef = useRef(null);
 
-  const initializeRazorpay = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
+  useEffect(() => {
+    const loadPayPalScript = () => {
+      // Load the PayPal script
+      const script = document.createElement('script');
+      script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=USD`;
+      script.async = true;
+      script.onload = () => initializePayPalButton();
       document.body.appendChild(script);
-    });
-  };
+    };
 
-  const makePayment = async () => {
-    const res = await initializeRazorpay();
-    if (!res) {
-      alert("Razorpay SDK failed to load");
-      return;
+    const initializePayPalButton = () => {
+      if (paypalButtonRef.current && window.paypal) {
+        // Clear any existing buttons
+        paypalButtonRef.current.innerHTML = '';
+        
+        window.paypal.Buttons({
+          style: {
+            color: 'blue',
+            shape: 'pill',
+            label: 'pay'
+          },
+          createOrder: (data, actions) => {
+            const amount = (quantity || 1) * 0.5;
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: amount.toFixed(2),
+                  currency_code: 'USD'
+                },
+                description: `Purchase ${quantity || 1} credits`
+              }]
+            });
+          },
+          onApprove: (data, actions) => {
+            return actions.order.capture().then(function(details) {
+              alert("Payment Successful! Thank you for your purchase.");
+              router.push('/dashboard');
+            });
+          },
+          onError: (err) => {
+            console.error('Payment error:', err);
+            alert('Payment failed. Please try again.');
+          }
+        }).render(paypalButtonRef.current);
+      }
+    };
+
+    // Check if quantity is available (router query might not be available immediately)
+    if (quantity) {
+      loadPayPalScript();
     }
-
-    setPaymentLoading(true);
-    try {
-      const amount = (quantity || 1) * 2 * 100;
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY,
-        amount: amount,
-        currency: "INR",
-        name: "Credit Purchase",
-        description: `Purchase ${quantity || 1} credits`,
-        handler: function (response) {
-          alert("Payment Successful!");
-          router.push('/dashboard');
-        },
-        prefill: {
-          email: "user@example.com",
-        },
-        theme: {
-          color: "#38bdf8",
-        },
-      };
-
-      const paymentObject = new window.Razorpay(options);
-      paymentObject.open();
-    } catch (error) {
-      console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
+  }, [quantity, router]);
 
   useEffect(() => {
     const checkAuth = async () => {
+      setLoading(true);
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (!user) {
           router.push('/');
@@ -95,7 +102,7 @@ const PurchasePage = () => {
           <div className={styles.purchaseCard}>
             <div className={styles.purchaseHeader}>
               <h1>Purchase Credits</h1>
-              <p className={styles.subtitle}>Secure payment powered by Razorpay</p>
+              <p className={styles.subtitle}>Secure payment options available</p>
             </div>
             <div className={styles.purchaseDetails}>
               <div className={styles.detailRow}>
@@ -110,17 +117,25 @@ const PurchasePage = () => {
                 <span>Total amount</span>
                 <span className={styles.total}>${(quantity || 1) * 0.5}.00</span>
               </div>
-              <button 
-                className={styles.payButton}
-                onClick={makePayment}
-                disabled={paymentLoading}
-              >
-                {paymentLoading ? (
+              
+              <div className={styles.paymentOptions}>
+                <h3>Payment Options</h3>
+                <div className={styles.paymentIcons}>
+                  <span>Credit/Debit Cards</span>
+                  <span>Net Banking</span>
+                  <span>UPI</span>
+                </div>
+              </div>
+              
+              {/* PayPal button container */}
+              <div ref={paypalButtonRef} className={styles.paypalButtonContainer}></div>
+              
+              {loading && (
+                <div className={styles.loadingContainer}>
                   <span className={styles.loadingSpinner}></span>
-                ) : (
-                  'Complete Purchase'
-                )}
-              </button>
+                  <p>Loading payment options...</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
