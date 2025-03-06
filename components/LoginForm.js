@@ -78,28 +78,36 @@ const LoginForm = ({ onClose }) => {
       // Handle specific error codes with user-friendly messages
       switch (error.code) {
         case 'auth/invalid-email':
-          setError('Invalid email address format');
+          setError('Please enter a valid email address');
           break;
         case 'auth/user-not-found':
-          setError('No account found with this email address');
-          break;
         case 'auth/wrong-password':
-          setError('Incorrect password');
+        case 'auth/invalid-credential':
+          setError('Incorrect email or password. Please try again.');
           break;
         case 'auth/weak-password':
           setError('Password should be at least 6 characters');
           break;
         case 'auth/email-already-in-use':
-          setError('This email address is already in use');
+          setError('An account with this email already exists');
           break;
         case 'auth/network-request-failed':
-          setError('Network error. Please check your internet connection');
+          setError('Connection error. Please check your internet and try again');
           break;
         case 'auth/too-many-requests':
-          setError('Too many unsuccessful login attempts. Please try again later');
+          setError('Too many attempts. Please try again later or reset your password');
+          break;
+        case 'auth/user-disabled':
+          setError('This account has been disabled. Please contact support');
+          break;
+        case 'auth/operation-not-allowed':
+          setError('This login method is not enabled. Please try another method');
+          break;
+        case 'auth/requires-recent-login':
+          setError('Please log in again before retrying this operation');
           break;
         default:
-          setError(error.message || 'An error occurred during authentication');
+          setError('Something went wrong. Please try again later');
       }
     } finally {
       setIsLoading(false);
@@ -120,22 +128,27 @@ const LoginForm = ({ onClose }) => {
       console.error('Google sign-in error:', error);
       switch (error.code) {
         case 'auth/unauthorized-domain':
-          setError('This domain is not authorized for Google sign-in. Please contact support.');
+          setError('Authentication not available on this domain. Please contact support');
           break;
         case 'auth/popup-closed-by-user':
-          setError('Sign-in popup was closed. Please try again.');
+          setError('Sign-in was canceled. Please try again');
           break;
         case 'auth/cancelled-popup-request':
-          setError('Multiple popup requests were made. Please try again.');
-          break;
         case 'auth/popup-blocked':
-          setError('Pop-up was blocked by your browser. Please enable pop-ups for this site.');
+          setError('Sign-in popup was blocked. Please enable popups for this site');
           break;
         case 'auth/account-exists-with-different-credential':
-          setError('An account already exists with the same email but different sign-in method.');
+          setError('An account with this email already exists using a different sign-in method');
+          break;
+        case 'auth/invalid-credential':
+        case 'auth/operation-not-allowed':
+          setError('This sign-in method is currently unavailable. Please try another option');
+          break;
+        case 'auth/network-request-failed':
+          setError('Connection error. Please check your internet and try again');
           break;
         default:
-          setError(error.message || 'Failed to sign in with Google');
+          setError('Unable to sign in with Google. Please try another method');
       }
     } finally {
       setIsLoading(false);
