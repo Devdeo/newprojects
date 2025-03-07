@@ -98,8 +98,8 @@ const Home = () => {
             />
             <PricingCard 
               title="Credit" 
-              price="50" 
-              features={['1 Hour Processing', '250MB File Size', 'Priority Support', 'Per Credit', 'Minimum 20 Credits (₹1000)']}
+              price="10" 
+              features={['1 Hour Processing', '250MB File Size', 'Priority Support', 'Per Credit', 'Minimum 20 Credits (₹200)']}
             />
           </div>
         </motion.section>

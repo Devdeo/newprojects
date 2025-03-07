@@ -14,8 +14,8 @@ const PurchasePage = () => {
   const [quantity, setQuantity] = useState(20);
 
   const [errorMessage, setErrorMessage] = useState('');
-  const MIN_PURCHASE_AMOUNT = 1000; // ₹1000 minimum purchase
-  const CREDIT_PRICE = 50; // ₹50 per credit
+  const MIN_PURCHASE_AMOUNT = 200; // ₹200 minimum purchase
+  const CREDIT_PRICE = 10; // ₹10 per credit
   const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 20 credits
 
   useEffect(() => {

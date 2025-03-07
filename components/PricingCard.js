@@ -93,7 +93,7 @@ const PricingCard = ({ title, price, features }) => {
             Buy {Math.max(MIN_CREDITS, quantity)} Credit{Math.max(MIN_CREDITS, quantity) > 1 ? 's' : ''}
           </button>
           <div className={styles.minCreditNotice}>
-            Minimum purchase: {MIN_CREDITS} credits (₹{(MIN_CREDITS * 50).toFixed(2)})
+            Minimum purchase: {MIN_CREDITS} credits (₹{(MIN_CREDITS * 10).toFixed(2)})
           </div>
         </div>
       )}
