@@ -561,7 +561,7 @@ const Dashboard = () => {
                           onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
                         >
                           <option value="hours">Hours</option>
-                          {creditBalance >= 20 && <option value="loop">Loop</option>}
+                          <option value="loop">Loop</option>
                         </select>
                         {newTask.durationType === 'loop' ? (
                           <div className={styles.numberInputGroup}>
@@ -583,7 +583,7 @@ const Dashboard = () => {
                               placeholder="Number of Loops"
                               value={newTask.hours}
                               onChange={(e) => {
-                                const maxLoops = Math.floor(creditBalance / 5);
+                                const maxLoops = Math.floor(creditBalance);
                                 const inputValue = parseInt(e.target.value);
                                 if (!isNaN(inputValue) && inputValue > maxLoops) {
                                   alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
@@ -594,13 +594,13 @@ const Dashboard = () => {
                               }}
                               required
                               min="1"
-                              max={Math.floor(creditBalance / 5)}
+                              max={Math.floor(creditBalance)}
                             />
                             <button 
                               type="button"
                               className={styles.numberInputButton}
                               onClick={() => {
-                                const maxLoops = Math.floor(creditBalance / 5);
+                                const maxLoops = Math.floor(creditBalance);
                                 const currentValue = parseInt(newTask.hours) || 0;
                                 if (currentValue < maxLoops) {
                                   setNewTask({...newTask, hours: (currentValue + 1).toString()});
@@ -608,7 +608,7 @@ const Dashboard = () => {
                                   alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
                                 }
                               }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 5)}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
                             >
                               +
                             </button>
@@ -667,7 +667,7 @@ const Dashboard = () => {
                       </div>
                       <small className={styles.creditInfo}>
                         {newTask.durationType === 'loop' 
-                          ? `Each loop costs 5 credits. Maximum: ${Math.floor(creditBalance / 5)} loops.` 
+                          ? `Each loop costs 1 credit. Maximum: ${Math.floor(creditBalance)} loops.` 
                           : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
                       </small>
                     </div>
@@ -693,7 +693,7 @@ const Dashboard = () => {
                           onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
                         >
                           <option value="hours">Hours</option>
-                          {creditBalance >= 20 && <option value="loop">Loop</option>}
+                          <option value="loop">Loop</option>
                         </select>
                         {newTask.durationType === 'loop' ? (
                           <div className={styles.numberInputGroup}>
@@ -715,7 +715,7 @@ const Dashboard = () => {
                               placeholder="Number of Loops"
                               value={newTask.hours}
                               onChange={(e) => {
-                                const maxLoops = Math.floor(creditBalance / 5);
+                                const maxLoops = Math.floor(creditBalance);
                                 const inputValue = parseInt(e.target.value);
                                 if (!isNaN(inputValue) && inputValue > maxLoops) {
                                   alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
@@ -726,13 +726,13 @@ const Dashboard = () => {
                               }}
                               required
                               min="1"
-                              max={Math.floor(creditBalance / 5)}
+                              max={Math.floor(creditBalance)}
                             />
                             <button 
                               type="button"
                               className={styles.numberInputButton}
                               onClick={() => {
-                                const maxLoops = Math.floor(creditBalance / 5);
+                                const maxLoops = Math.floor(creditBalance);
                                 const currentValue = parseInt(newTask.hours) || 0;
                                 if (currentValue < maxLoops) {
                                   setNewTask({...newTask, hours: (currentValue + 1).toString()});
@@ -740,7 +740,7 @@ const Dashboard = () => {
                                   alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
                                 }
                               }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 5)}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
                             >
                               +
                             </button>
@@ -799,7 +799,7 @@ const Dashboard = () => {
                       </div>
                       <small className={styles.creditInfo}>
                         {newTask.durationType === 'loop' 
-                          ? `Each loop costs 5 credits. Maximum: ${Math.floor(creditBalance / 5)} loops.` 
+                          ? `Each loop costs 1 credit. Maximum: ${Math.floor(creditBalance)} loops.` 
                           : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
                       </small>
                     </div>
@@ -866,7 +866,7 @@ const Dashboard = () => {
                     .filter(task => task.status === 'active')
                     .slice((activePage - 1) * 10, activePage * 10)
                     .map(task => (
-                      <tr key={task.id}>
+                      <tr                      <tr key={task.id}>
                         <td>{task.title}</td>
                         <td>{task.hours} hours</td>
                         <td>{task.streamKey}</td>
