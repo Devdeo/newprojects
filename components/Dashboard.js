@@ -633,7 +633,7 @@ const Dashboard = () => {
                               placeholder="Hours"
                               value={newTask.hours}
                               onChange={(e) => {
-                                const maxHours = Math.floor(creditBalance / 2);
+                                const maxHours = Math.floor(creditBalance);
                                 const inputValue = parseInt(e.target.value);
                                 if (!isNaN(inputValue) && inputValue > maxHours) {
                                   alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
@@ -644,13 +644,13 @@ const Dashboard = () => {
                               }}
                               required
                               min="1"
-                              max={Math.floor(creditBalance / 2)}
+                              max={Math.floor(creditBalance)}
                             />
                             <button 
                               type="button"
                               className={styles.numberInputButton}
                               onClick={() => {
-                                const maxHours = Math.floor(creditBalance / 2);
+                                const maxHours = Math.floor(creditBalance);
                                 const currentValue = parseInt(newTask.hours) || 0;
                                 if (currentValue < maxHours) {
                                   setNewTask({...newTask, hours: (currentValue + 1).toString()});
@@ -658,7 +658,7 @@ const Dashboard = () => {
                                   alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
                                 }
                               }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 2)}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
                             >
                               +
                             </button>
@@ -668,7 +668,7 @@ const Dashboard = () => {
                       <small className={styles.creditInfo}>
                         {newTask.durationType === 'loop' 
                           ? `Each loop costs 5 credits. Maximum: ${Math.floor(creditBalance / 5)} loops.` 
-                          : `Each hour costs 2 credits. Maximum: ${Math.floor(creditBalance / 2)} hours.`}
+                          : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
                       </small>
                     </div>
                     {isFileUploaded && (
@@ -774,7 +774,7 @@ const Dashboard = () => {
                               placeholder="Hours"
                               value={newTask.hours}
                               onChange={(e) => {
-                                const maxHours = Math.floor(creditBalance / 2);
+                                const maxHours = Math.floor(creditBalance);
                                 const inputValue = parseInt(e.target.value);
                                 if (!isNaN(inputValue) && inputValue > maxHours) {
                                   alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
@@ -785,13 +785,13 @@ const Dashboard = () => {
                               }}
                               required
                               min="1"
-                              max={Math.floor(creditBalance / 2)}
+                              max={Math.floor(creditBalance)}
                             />
                             <button 
                               type="button"
                               className={styles.numberInputButton}
                               onClick={() => {
-                                const maxHours = Math.floor(creditBalance / 2);
+                                const maxHours = Math.floor(creditBalance);
                                 const currentValue = parseInt(newTask.hours) || 0;
                                 if (currentValue < maxHours) {
                                   setNewTask({...newTask, hours: (currentValue + 1).toString()});
@@ -799,7 +799,7 @@ const Dashboard = () => {
                                   alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
                                 }
                               }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 2)}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
                             >
                               +
                             </button>
@@ -809,7 +809,7 @@ const Dashboard = () => {
                       <small className={styles.creditInfo}>
                         {newTask.durationType === 'loop' 
                           ? `Each loop costs 5 credits. Maximum: ${Math.floor(creditBalance / 5)} loops.` 
-                          : `Each hour costs 2 credits. Maximum: ${Math.floor(creditBalance / 2)} hours.`}
+                          : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
                       </small>
                     </div>
                   </div>
@@ -858,7 +858,7 @@ const Dashboard = () => {
           </div>
         )}{activeTab === 'active-live' && (
           <div>
-            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px'>}}>Active Live Streams</h2>
             <div className={styles.tableContainer}>
               <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
