@@ -1,0 +1,255 @@
+To create a custom payment page in your Next.js application with a minimum purchase quantity of 20 credits, where each credit costs $0.5, you can integrate Stripe for a seamless, self-hosted payment experience. This guide will walk you through setting up the payment page, enforcing the minimum quantity, processing payments, and displaying a success page—all within your Next.js app.
+
+---
+
+## Prerequisites
+
+- A Next.js project set up.
+- A Stripe account with API keys (publishable and secret keys).
+
+---
+
+## 1. Set Up Stripe in Your Next.js Application
+
+### Install Required Packages
+Install the necessary Stripe libraries by running:
+
+```bash
+npm install @stripe/stripe-js @stripe/react-stripe-js stripe
+```
+
+- **`@stripe/stripe-js`**: Loads Stripe.js on the client side.
+- **`@stripe/react-stripe-js`**: Provides React components and hooks for Stripe integration.
+- **`stripe`**: The Node.js library for server-side Stripe operations.
+
+### Configure Environment Variables
+1. Create a `.env.local` file in the root of your Next.js project.
+2. Add your Stripe API keys (get them from your Stripe Dashboard):
+   ```
+   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_publishable_key
+   STRIPE_SECRET_KEY=your_secret_key
+   ```
+   - **Note**: `NEXT_PUBLIC_` makes the publishable key available client-side, while the secret key remains server-side for security.
+
+Restart your Next.js app after adding these variables.
+
+---
+
+## 2. Create the Custom Payment Page
+
+You’ll build a payment page where users can specify how many credits to buy (minimum 20), see the total cost ($0.5 per credit), and pay using Stripe Elements.
+
+### Payment Page Code
+Create a file named `pages/payment.js` with the following content:
+
+```jsx
+import { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useRouter } from 'next/router';
+
+// Initialize Stripe with your publishable key
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const CheckoutForm = () => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+  const [credits, setCredits] = useState(20); // Default to minimum
+  const [error, setError] = useState(null);
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    setError(null);
+
+    // Calculate amount in cents ($0.5 per credit = 50 cents)
+    const amount = credits * 50;
+
+    // Create payment intent on the server
+    const response = await fetch('/api/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount }),
+    });
+    const { clientSecret } = await response.json();
+
+    // Confirm payment with Stripe
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card: elements.getElement(CardElement) },
+    });
+
+    if (result.error) {
+      setError(result.error.message);
+      setProcessing(false);
+    } else {
+      // Payment successful, redirect to success page
+      router.push('/success');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ maxWidth: '400px', margin: '0 auto' }}>
+      <h2>Buy Credits</h2>
+      <label>
+        Number of Credits (minimum 20):
+        <input
+          type="number"
+          value={credits}
+          onChange={(e) => setCredits(Math.max(20, e.target.value))}
+          min="20"
+          style={{ display: 'block', margin: '10px 0', padding: '5px' }}
+        />
+      </label>
+      <p>Total Amount: ${(credits * 0.5).toFixed(2)}</p>
+      <CardElement options={{ style: { base: { fontSize: '16px' } } }} />
+      <button
+        type="submit"
+        disabled={!stripe || processing}
+        style={{ marginTop: '20px', padding: '10px', width: '100%' }}
+      >
+        {processing ? 'Processing...' : 'Buy Credits'}
+      </button>
+      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
+    </form>
+  );
+};
+
+const PaymentPage = () => (
+  <Elements stripe={stripePromise}>
+    <CheckoutForm />
+  </Elements>
+);
+
+export default PaymentPage;
+```
+
+### How It Works
+- **Credit Input**: Users enter the number of credits, with a minimum of 20 enforced via `Math.max(20, e.target.value)`.
+- **Total Calculation**: Displays the total cost ($0.5 per credit).
+- **Stripe Elements**: The `CardElement` securely collects payment details.
+- **Form Submission**: Sends the amount to an API route to create a payment intent, then confirms the payment with Stripe.
+
+---
+
+## 3. Create the Payment Intent API Route
+
+Set up a server-side endpoint to generate a Stripe payment intent.
+
+### API Route Code
+Create `pages/api/create-payment-intent.js` with:
+
+```javascript
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    try {
+      const { amount } = req.body;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount, // Amount in cents
+        currency: 'usd',
+      });
+      res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  } else {
+    res.setHeader('Allow', 'POST');
+    res.status(405).end('Method Not Allowed');
+  }
+}
+```
+
+### Explanation
+- This endpoint creates a payment intent using the amount sent from the client (in cents) and returns a `clientSecret` for payment confirmation.
+
+---
+
+## 4. Add a Success Page
+
+After a successful payment, redirect users to a custom success page.
+
+### Success Page Code
+Create `pages/success.js` with:
+
+```jsx
+export default function Success() {
+  return (
+    <div style={{ textAlign: 'center', marginTop: '50px' }}>
+      <h1>Thank You!</h1>
+      <p>Your payment was successful. Credits have been added to your account.</p>
+    </div>
+  );
+}
+```
+
+---
+
+## 5. Test Your Integration
+
+1. **Enable Test Mode**: In your Stripe Dashboard, switch to test mode.
+2. **Use Test Card**: Try `4242 4242 4242 4242`, with any future expiry date and 3-digit CVC.
+3. **Verify**:
+   - Enter a number less than 20; it should adjust to 20.
+   - Complete a payment and ensure you’re redirected to `/success`.
+
+---
+
+## Optional: Enhance with Webhooks
+
+To securely update user credits after payment, use Stripe webhooks.
+
+### Webhook Endpoint
+Create `pages/api/webhook.js`:
+
+```javascript
+import Stripe from 'stripe';
+import { buffer } from 'micro';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+export const config = { api: { bodyParser: false } };
+
+export default async function handler(req, res) {
+  if (req.method === 'POST') {
+    const buf = await buffer(req);
+    const sig = req.headers['stripe-signature'];
+
+    try {
+      const event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        // Add logic to update user credits here
+        console.log('Payment succeeded:', paymentIntent);
+      }
+      res.json({ received: true });
+    } catch (err) {
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  } else {
+    res.setHeader('Allow', 'POST');
+    res.status(405).end('Method Not Allowed');
+  }
+}
+```
+
+### Configure Webhook
+1. In Stripe Dashboard > **Developers > Webhooks**, add an endpoint (e.g., `https://yourdomain.com/api/webhook`).
+2. Select `payment_intent.succeeded`.
+3. Add the webhook secret to `.env.local` as `STRIPE_WEBHOOK_SECRET`.
+
+---
+
+## Final Notes
+
+- **Access the Page**: Navigate to `/payment` in your app (e.g., `http://localhost:3000/payment`).
+- **Styling**: The example includes basic inline styles; enhance with CSS or a framework like Tailwind CSS.
+- **Security**: Never commit `.env.local` to version control—use `.gitignore`.
+
+With this setup, you have a custom payment page in your Next.js app that enforces a minimum purchase of 20 credits at $0.5 each, processes payments via Stripe, and redirects to a success page upon completion.
