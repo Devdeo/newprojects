@@ -736,6 +736,38 @@
   margin-top: 8px;
 }
 
+.creditInfo {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.uploadRestrictions {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.restrictionWarning {
+  color: #b91c1c;
+  font-size: 13px;
+  margin: 0;
+}
+
+.restrictionInfo {
+  color: #0284c7;
+  font-size: 13px;
+  margin: 0;
+}
+
+.disabledInput {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+}
+
 @keyframes shimmer {
   0% { background-position: -1000px 0; }
   100% { background-position: 1000px 0; }

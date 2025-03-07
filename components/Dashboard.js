@@ -433,7 +433,7 @@ const Dashboard = () => {
                 <h3>Previous Streams</h3>
                 <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'completed').length}</p>
               </div>
-           
+
             </div>
             <div className={styles.recentActivity}>
               <h3>Recent Activity</h3>
@@ -475,7 +475,7 @@ const Dashboard = () => {
                     </ul>
                   </div>
                 )}
-                
+
                 {isUploading && (
                   <div className={styles.fileUploadStatus}>
                     <div className={styles.progressBar}>
@@ -561,28 +561,53 @@ const Dashboard = () => {
                           onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
                         >
                           <option value="hours">Hours</option>
-                          <option value="loop">Loop</option>
+                          {creditBalance >= 20 && <option value="loop">Loop</option>}
                         </select>
                         {newTask.durationType === 'loop' ? (
                           <input
                             type="number"
                             placeholder="Number of Loops"
                             value={newTask.hours}
-                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            onChange={(e) => {
+                              const maxLoops = Math.floor(creditBalance / 5);
+                              const inputValue = parseInt(e.target.value);
+                              if (!isNaN(inputValue) && inputValue > maxLoops) {
+                                alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
+                                setNewTask({...newTask, hours: maxLoops.toString()});
+                              } else {
+                                setNewTask({...newTask, hours: e.target.value});
+                              }
+                            }}
                             required
                             min="1"
+                            max={Math.floor(creditBalance / 5)}
                           />
                         ) : (
                           <input
                             type="number"
                             placeholder="Hours"
                             value={newTask.hours}
-                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            onChange={(e) => {
+                              const maxHours = Math.floor(creditBalance / 2);
+                              const inputValue = parseInt(e.target.value);
+                              if (!isNaN(inputValue) && inputValue > maxHours) {
+                                alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
+                                setNewTask({...newTask, hours: maxHours.toString()});
+                              } else {
+                                setNewTask({...newTask, hours: e.target.value});
+                              }
+                            }}
                             required
                             min="1"
+                            max={Math.floor(creditBalance / 2)}
                           />
                         )}
                       </div>
+                      <small className={styles.creditInfo}>
+                        {newTask.durationType === 'loop' 
+                          ? `Each loop costs 5 credits. Maximum: ${Math.floor(creditBalance / 5)} loops.` 
+                          : `Each hour costs 2 credits. Maximum: ${Math.floor(creditBalance / 2)} hours.`}
+                      </small>
                     </div>
                     {isFileUploaded && (
                       <div className={styles.formGroup}>
@@ -615,28 +640,53 @@ const Dashboard = () => {
                           onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
                         >
                           <option value="hours">Hours</option>
-                          <option value="loop">Loop</option>
+                          {creditBalance >= 20 && <option value="loop">Loop</option>}
                         </select>
                         {newTask.durationType === 'loop' ? (
                           <input
                             type="number"
                             placeholder="Number of Loops"
                             value={newTask.hours}
-                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            onChange={(e) => {
+                              const maxLoops = Math.floor(creditBalance / 5);
+                              const inputValue = parseInt(e.target.value);
+                              if (!isNaN(inputValue) && inputValue > maxLoops) {
+                                alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
+                                setNewTask({...newTask, hours: maxLoops.toString()});
+                              } else {
+                                setNewTask({...newTask, hours: e.target.value});
+                              }
+                            }}
                             required
                             min="1"
+                            max={Math.floor(creditBalance / 5)}
                           />
                         ) : (
                           <input
                             type="number"
                             placeholder="Hours"
                             value={newTask.hours}
-                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            onChange={(e) => {
+                              const maxHours = Math.floor(creditBalance / 2);
+                              const inputValue = parseInt(e.target.value);
+                              if (!isNaN(inputValue) && inputValue > maxHours) {
+                                alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
+                                setNewTask({...newTask, hours: maxHours.toString()});
+                              } else {
+                                setNewTask({...newTask, hours: e.target.value});
+                              }
+                            }}
                             required
                             min="1"
+                            max={Math.floor(creditBalance / 2)}
                           />
                         )}
                       </div>
+                      <small className={styles.creditInfo}>
+                        {newTask.durationType === 'loop' 
+                          ? `Each loop costs 5 credits. Maximum: ${Math.floor(creditBalance / 5)} loops.` 
+                          : `Each hour costs 2 credits. Maximum: ${Math.floor(creditBalance / 2)} hours.`}
+                      </small>
                     </div>
                   </div>
                 )}
@@ -801,7 +851,7 @@ const Dashboard = () => {
                   </span>
                   <button 
                     className={styles.paginationButton} 
-                    disabled={schedulePage === Math.ceil(tasks.filter(task => task.status === 'scheduled').length / 10)}
+                    disabled={schedulePage === Math.ceil(tasks.filter(task => task.status=== 'scheduled').length / 10)}
                     onClick={() => setSchedulePage(schedulePage + 1)}
                   >
                     Next
