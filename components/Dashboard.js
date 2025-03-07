@@ -866,7 +866,7 @@ const Dashboard = () => {
                     .filter(task => task.status === 'active')
                     .slice((activePage - 1) * 10, activePage * 10)
                     .map(task => (
-                      <tr                      <tr key={task.id}>
+                      <tr key={task.id}>
                         <td>{task.title}</td>
                         <td>{task.hours} hours</td>
                         <td>{task.streamKey}</td>
