@@ -40,6 +40,7 @@ const Dashboard = () => {
     scheduleType: 'now',
     startTime: '',
     endTime: '',
+    durationType: 'hours',
   });
   const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -207,6 +208,7 @@ const Dashboard = () => {
       const taskData = {
         title: newTask.title,
         hours: parseInt(newTask.hours) || 1,
+        durationType: newTask.durationType || 'hours',
         streamKey: newTask.key,
         status: newTask.scheduleType === 'schedule' ? 'scheduled' : 'active',
         createdAt: serverTimestamp(),
@@ -275,7 +277,8 @@ const Dashboard = () => {
         videoUrl: '',
         scheduleType: 'now',
         startTime: '',
-        endTime: ''
+        endTime: '',
+        durationType: 'hours'
       });
       setVideoFile(null);
       setIsFileUploaded(false);
@@ -543,14 +546,35 @@ const Dashboard = () => {
                   <div className={styles.nowOptions}>
                     <div className={styles.formGroup}>
                       <label>Stream Duration</label>
-                      <input
-                        type="number"
-                        placeholder="Hours"
-                        value={newTask.hours}
-                        onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
-                        required
-                        min="1"
-                      />
+                      <div className={styles.durationTypeContainer}>
+                        <select 
+                          className={styles.durationTypeSelect}
+                          value={newTask.durationType || 'hours'}
+                          onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
+                        >
+                          <option value="hours">Hours</option>
+                          <option value="loop">Loop</option>
+                        </select>
+                        {newTask.durationType === 'loop' ? (
+                          <input
+                            type="number"
+                            placeholder="Number of Loops"
+                            value={newTask.hours}
+                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            required
+                            min="1"
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            placeholder="Hours"
+                            value={newTask.hours}
+                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            required
+                            min="1"
+                          />
+                        )}
+                      </div>
                     </div>
                     <div className={styles.formGroup}>
                       <label>End Date/Time (Optional)</label>
@@ -573,12 +597,36 @@ const Dashboard = () => {
                       />
                     </div>
                     <div className={styles.formGroup}>
-                      <label>End Date/Time</label>
-                      <input
-                        type="datetime-local"
-                        required
-                        onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
-                      />
+                      <label>Stream Duration</label>
+                      <div className={styles.durationTypeContainer}>
+                        <select 
+                          className={styles.durationTypeSelect}
+                          value={newTask.durationType || 'hours'}
+                          onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
+                        >
+                          <option value="hours">Hours</option>
+                          <option value="loop">Loop</option>
+                        </select>
+                        {newTask.durationType === 'loop' ? (
+                          <input
+                            type="number"
+                            placeholder="Number of Loops"
+                            value={newTask.hours}
+                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            required
+                            min="1"
+                          />
+                        ) : (
+                          <input
+                            type="number"
+                            placeholder="Hours"
+                            value={newTask.hours}
+                            onChange={(e) => setNewTask({...newTask, hours: e.target.value})}
+                            required
+                            min="1"
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
