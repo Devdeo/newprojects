@@ -5,6 +5,7 @@ import { auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import Navbar from '../components/Navbar';
 import styles from '../styles/Page.module.css';
 
@@ -130,47 +131,116 @@ const PurchasePage = () => {
     setQuantity(prev => prev > MIN_CREDITS ? prev - 1 : MIN_CREDITS);
   };
 
-  const renderPaymentForm = () => {
+  // Stripe CardElement checkout form component
+  const CheckoutForm = ({ quantity, totalAmount }) => {
+    const stripe = useStripe();
+    const elements = useElements();
+    const router = useRouter();
+    const [error, setError] = useState('');
+    const [processing, setProcessing] = useState(false);
+    
+    const handleSubmit = async (event) => {
+      event.preventDefault();
+      
+      if (!stripe || !elements) {
+        return;
+      }
+      
+      setProcessing(true);
+      setError('');
+      
+      try {
+        // Create payment intent on the server
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            amount: Math.round(totalAmount * 100), // Convert to cents
+            userId: auth.currentUser?.uid || '',
+            quantity: quantity
+          }),
+        });
+        
+        const { clientSecret, error: intentError } = await response.json();
+        
+        if (intentError) {
+          setError(intentError);
+          setProcessing(false);
+          return;
+        }
+        
+        // Confirm card payment with Stripe
+        const result = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: { card: elements.getElement(CardElement) }
+        });
+        
+        if (result.error) {
+          setError(result.error.message);
+          setProcessing(false);
+        } else {
+          // Payment successful, redirect to dashboard
+          router.push('/dashboard?payment_success=true');
+        }
+      } catch (err) {
+        console.error('Payment error:', err);
+        setError('An unexpected error occurred. Please try again.');
+        setProcessing(false);
+      }
+    };
+    
     return (
-      <form onSubmit={handleSubmitPayment} className={styles.paymentForm}>
-        <div className={styles.paymentMethodSelector}>
-          <button 
-            className={`${styles.methodButton} ${paymentMethod === 'card' ? styles.methodButtonActive : ''}`}
-            onClick={() => setPaymentMethod('card')}
-            type="button"
-          >
-            Credit/Debit Card
-          </button>
-          <button 
-            className={`${styles.methodButton} ${paymentMethod === 'upi' ? styles.methodButtonActive : ''}`}
-            onClick={() => setPaymentMethod('upi')}
-            type="button"
-          >
-            UPI
-          </button>
-          <button 
-            className={`${styles.methodButton} ${paymentMethod === 'netbanking' ? styles.methodButtonActive : ''}`}
-            onClick={() => setPaymentMethod('netbanking')}
-            type="button"
-          >
-            Net Banking
-          </button>
+      <form onSubmit={handleSubmit} className={styles.paymentForm}>
+        <div className={styles.cardElementContainer}>
+          <label className={styles.cardLabel}>
+            Card Details
+          </label>
+          <CardElement 
+            options={{
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#fff',
+                  '::placeholder': {
+                    color: '#aab7c4',
+                  },
+                },
+                invalid: {
+                  color: '#fa755a',
+                  iconColor: '#fa755a',
+                },
+              },
+            }}
+            className={styles.cardElement}
+          />
         </div>
+        
+        {error && <div className={styles.errorMessage}>{error}</div>}
+        
         <button 
           type="submit" 
           className={styles.payButton}
-          disabled={paymentLoading}
+          disabled={!stripe || processing}
         >
-          {paymentLoading ? (
+          {processing ? (
             <>
               <span className={styles.loadingSpinner}></span>
               Processing...
             </>
           ) : (
-            'Proceed to Payment'
+            'Pay Now'
           )}
         </button>
       </form>
+    );
+  };
+  
+  const renderPaymentForm = () => {
+    const totalAmount = quantity * CREDIT_PRICE;
+    
+    return (
+      <Elements stripe={stripePromise}>
+        <CheckoutForm quantity={quantity} totalAmount={totalAmount} />
+      </Elements>
     );
   };
 

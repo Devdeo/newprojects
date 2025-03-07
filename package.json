@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.15.2",
+    "@stripe/react-stripe-js": "^3.3.0",
     "@stripe/stripe-js": "^5.9.2",
     "firebase": "^11.3.1",
     "formidable": "^3.5.2",

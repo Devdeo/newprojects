@@ -490,3 +490,50 @@
   border-radius: 8px;
   margin-bottom: 1rem;
 }
+.cardElementContainer {
+  margin-bottom: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cardLabel {
+  display: block;
+  margin-bottom: 0.8rem;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.cardElement {
+  padding: 0.5rem 0;
+}
+
+.minCreditNotice {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: rgba(255, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.stripePaymentOptions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stripePaymentOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
