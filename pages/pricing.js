@@ -28,7 +28,7 @@ const PricingPage = () => {
           <PricingCard 
             title="Credit" 
             price="10" 
-            features={['1 Hour Processing', '1GB File Size', 'Priority Support', 'Per Credit', 'Minimum 20 Credits (₹200)']}
+            features={['1 Hour Processing', '1GB File Size', 'Priority Support', 'Per Credit', 'Minimum 10 Credits (₹100)']}
           />
         </div>
       </motion.section>

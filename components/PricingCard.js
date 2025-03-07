@@ -20,7 +20,7 @@ const PricingCard = ({ title, price, features }) => {
     return () => unsubscribe();
   }, []);
 
-  const MIN_CREDITS = 20; // Minimum $10 purchase at $0.50 per credit
+  const MIN_CREDITS = 10; // Minimum ₹100 purchase at ₹10 per credit
   
   const handleBuyCredits = async () => {
     if (!user) {

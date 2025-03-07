@@ -11,12 +11,12 @@ const PurchasePage = () => {
   const { quantity: initialQuantity } = router.query;
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [quantity, setQuantity] = useState(20);
+  const [quantity, setQuantity] = useState(10);
 
   const [errorMessage, setErrorMessage] = useState('');
-  const MIN_PURCHASE_AMOUNT = 200; // ₹200 minimum purchase
+  const MIN_PURCHASE_AMOUNT = 100; // ₹100 minimum purchase
   const CREDIT_PRICE = 10; // ₹10 per credit
-  const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 20 credits
+  const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 10 credits
 
   useEffect(() => {
     // Set initial quantity from URL parameter, ensuring it meets minimum

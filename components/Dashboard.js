@@ -14,7 +14,7 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const sidebarRef = useRef(null);
-  
+
   // Handle click outside the sidebar to close menu in mobile view
   useEffect(() => {
     function handleClickOutside(event) {
@@ -25,7 +25,7 @@ const Dashboard = () => {
         setMenuVisible(false);
       }
     }
-    
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -406,7 +406,7 @@ const Dashboard = () => {
                 <p>{creditBalance} credits</p>
                 <button 
                   className={styles.addCreditButton}
-                  onClick={() => router.push('/purchase?quantity=20')}
+                  onClick={() => router.push('/purchase?quantity=10')}
                 >
                   Add Credits
                 </button>
@@ -831,7 +831,7 @@ const Dashboard = () => {
                 <p className={styles.balanceAmount}>{creditBalance} credits</p>
                 <button 
                   className={styles.addCreditButton}
-                  onClick={() => router.push('/purchase?quantity=20')}
+                  onClick={() => router.push('/purchase?quantity=10')}
                 >
                   Add Credits
                 </button>
