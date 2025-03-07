@@ -491,11 +491,7 @@
   margin-bottom: 1rem;
 }
 .cardElementContainer {
-  margin-bottom: 1.5rem;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 1rem;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
 }
 
 .cardLabel {
@@ -536,4 +532,19 @@
   padding: 0.5rem 0.75rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
+}
+
+.postalCodeInput {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.postalCodeInput::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }

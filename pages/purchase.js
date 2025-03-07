@@ -138,6 +138,7 @@ const PurchasePage = () => {
     const router = useRouter();
     const [error, setError] = useState('');
     const [processing, setProcessing] = useState(false);
+    const [postalCode, setPostalCode] = useState('');
     
     const handleSubmit = async (event) => {
       event.preventDefault();
@@ -171,7 +172,14 @@ const PurchasePage = () => {
         
         // Confirm card payment with Stripe
         const result = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: { card: elements.getElement(CardElement) }
+          payment_method: { 
+            card: elements.getElement(CardElement),
+            billing_details: {
+              address: {
+                postal_code: postalCode
+              }
+            }
+          }
         });
         
         if (result.error) {
@@ -194,6 +202,14 @@ const PurchasePage = () => {
           <label className={styles.cardLabel}>
             Card Details
           </label>
+          <div className={styles.formGroup}>
+            <input
+              type="text"
+              placeholder="Postal Code / ZIP"
+              className={styles.postalCodeInput}
+              onChange={(e) => setPostalCode(e.target.value)}
+            />
+          </div>
           <CardElement 
             options={{
               style: {
@@ -209,6 +225,7 @@ const PurchasePage = () => {
                   iconColor: '#fa755a',
                 },
               },
+              hidePostalCode: true,
             }}
             className={styles.cardElement}
           />
