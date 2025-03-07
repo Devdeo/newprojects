@@ -153,7 +153,7 @@ const PurchasePage = () => {
             } else {
               alert('Payment verification failed. Please contact support.');
             }
-            });
+            
 
             const data = await verifyResponse.json();
 

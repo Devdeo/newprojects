@@ -20,6 +20,7 @@
     "razorpay": "^2.9.6",
     "react": "^18.2.0",
     "react-dom": "18.2.0",
+    "react-hot-toast": "^2.5.2",
     "shortid": "^2.2.17",
     "stripe": "^17.7.0",
     "tailwindcss": "^3.4.1"
