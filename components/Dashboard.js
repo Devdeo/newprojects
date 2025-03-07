@@ -858,7 +858,7 @@ const Dashboard = () => {
           </div>
         )}{activeTab === 'active-live' && (
           <div>
-            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px'>}}>Active Live Streams</h2>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
             <div className={styles.tableContainer}>
               <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
