@@ -430,10 +430,7 @@ const Dashboard = () => {
                 <h3>Previous Streams</h3>
                 <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'completed').length}</p>
               </div>
-              <div className={styles.summaryCard}>
-                <h3>Credit Balance</h3>
-                <p className={styles.summaryNumber}>{creditBalance}</p>
-              </div>
+           
             </div>
             <div className={styles.recentActivity}>
               <h3>Recent Activity</h3>
