@@ -671,15 +671,6 @@ const Dashboard = () => {
                           : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
                       </small>
                     </div>
-                    {isFileUploaded && (
-                      <div className={styles.formGroup}>
-                        <label>End Date/Time (Optional)</label>
-                        <input
-                          type="datetime-local"
-                          onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
-                        />
-                      </div>
-                    )}
                   </div>
                 )}
 
