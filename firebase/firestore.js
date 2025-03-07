@@ -41,15 +41,37 @@ export const checkSubscription = async (userId) => {
   }
 };
 
-export const addCreditsToUser = async (userId, creditsToAdd) => {
+export const addCreditsToUser = async (userId, creditsToAdd, transactionDetails = null) => {
   try {
-    //Implementation to add credits to the user would go here.  This is a placeholder.
-    console.log(`Attempting to add ${creditsToAdd} credits to user ${userId}`);
-    //Example:  Update a user document in Firestore.  Replace with your actual implementation.
-    const userRef = doc(db, 'users', userId); // Assumes you have a 'users' collection
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      throw new Error('User document does not exist');
+    }
+    
+    const userData = userDoc.data();
+    const currentCredits = userData.creditBalance || 0;
+    const newCreditBalance = currentCredits + creditsToAdd;
+    
+    // Update user's credit balance
     await updateDoc(userRef, {
-      credits:  (await getDoc(userRef)).data().credits + creditsToAdd
+      creditBalance: newCreditBalance,
+      lastUpdated: new Date()
     });
+    
+    // If transaction details are provided, store the transaction in history
+    if (transactionDetails) {
+      const transactionsRef = collection(db, 'users', userId, 'transactions');
+      await addDoc(transactionsRef, {
+        ...transactionDetails,
+        previousBalance: currentCredits,
+        newBalance: newCreditBalance
+      });
+    }
+    
+    console.log(`Successfully added ${creditsToAdd} credits to user ${userId}. New balance: ${newCreditBalance}`);
+    return newCreditBalance;
   } catch (error) {
     console.error('Error adding credits to user:', error);
     throw error;

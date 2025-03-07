@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
-import { auth } from '../firebase/config';
-import { db } from '../firebase/config';
-import { collection, addDoc, doc, getDoc, getDocs, serverTimestamp } from 'firebase/firestore';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { auth, db } from '../firebase/config';
+import { collection, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL, getStorage, deleteObject } from 'firebase/storage';
+import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -48,20 +48,7 @@ const Dashboard = () => {
   const [schedulePage, setSchedulePage] = useState(1);
   const [previousPage, setPreviousPage] = useState(1);
   const [walletPage, setWalletPage] = useState(1);
-  const [transactions, setTransactions] = useState([
-    { id: 'TRX-1001', date: new Date().toISOString(), description: 'Initial credit purchase', amount: 100, type: 'credit', balance: 100 },
-    { id: 'TRX-1002', date: new Date().toISOString(), description: 'Stream: "Welcome to my channel"', amount: 5, type: 'debit', balance: 95 },
-    { id: 'TRX-1003', date: new Date().toISOString(), description: 'Stream: "Gaming with friends"', amount: 3, type: 'debit', balance: 92 },
-    { id: 'TRX-1004', date: new Date().toISOString(), description: 'Bonus credits', amount: 10, type: 'credit', balance: 102 },
-    { id: 'TRX-1005', date: new Date().toISOString(), description: 'Credit package - Basic', amount: 20, type: 'credit', balance: 122 },
-    { id: 'TRX-1006', date: new Date().toISOString(), description: 'Stream: "Tutorial session"', amount: 2, type: 'debit', balance: 120 },
-    { id: 'TRX-1007', date: new Date().toISOString(), description: 'Stream: "Weekly update"', amount: 1, type: 'debit', balance: 119 },
-    { id: 'TRX-1008', date: new Date().toISOString(), description: 'Credit package - Premium', amount: 50, type: 'credit', balance: 169 },
-    { id: 'TRX-1009', date: new Date().toISOString(), description: 'Stream: "Q&A session"', amount: 5, type: 'debit', balance: 164 },
-    { id: 'TRX-1010', date: new Date().toISOString(), description: 'Referral bonus', amount: 15, type: 'credit', balance: 179 },
-    { id: 'TRX-1011', date: new Date().toISOString(), description: 'Stream: "Product review"', amount: 3, type: 'debit', balance: 176 },
-    { id: 'TRX-1012', date: new Date().toISOString(), description: 'Stream: "Live podcast"', amount: 4, type: 'debit', balance: 172 }
-  ]);
+  const [transactions, setTransactions] = useState([]);
   const [uploadStatus, setUploadStatus] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isFileUploaded, setIsFileUploaded] = useState(false);
@@ -182,6 +169,17 @@ const Dashboard = () => {
             email: userData.email || auth.currentUser.email || 'No email'
           });
           setCreditBalance(userData.creditBalance || 0);
+
+          // Fetch transaction history
+          const transactionsRef = collection(db, 'users', auth.currentUser.uid, 'transactions');
+          const transactionsSnapshot = await getDocs(transactionsRef);
+          const transactionsData = transactionsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().timestamp?.toDate?.() || new Date()
+          })).sort((a, b) => b.date - a.date);
+
+          setTransactions(transactionsData);
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
@@ -191,7 +189,14 @@ const Dashboard = () => {
     };
 
     fetchUserData();
-  }, []);
+
+    // Check for payment success query parameter
+    if (router.query.payment === 'success') {
+      toast.success('Payment successful! Your credits have been added.');
+      // Remove the query parameter
+      router.replace('/dashboard', undefined, { shallow: true });
+    }
+  }, [router]);
 
 
   const handleCreateTask = async (e) => {
@@ -901,7 +906,7 @@ const Dashboard = () => {
                   >
                     Next
                   </button>
-                </div>
+                </</div>
               )}
             </div>
           </div>

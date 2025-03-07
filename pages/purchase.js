@@ -144,6 +144,16 @@ const PurchasePage = () => {
                 quantity: quantity,
               }),
             });
+            
+            const result = await verifyResponse.json();
+            
+            if (result.success) {
+              // Redirect to dashboard on success
+              router.push('/dashboard?payment=success');
+            } else {
+              alert('Payment verification failed. Please contact support.');
+            }
+            });
 
             const data = await verifyResponse.json();
 

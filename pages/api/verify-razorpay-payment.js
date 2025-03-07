@@ -26,8 +26,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: 'Invalid signature' });
     }
 
-    // Payment is valid, add credits to user
-    await addCreditsToUser(userId, parseInt(quantity));
+    // Payment is valid, add credits to user with transaction details
+    const transactionDetails = {
+      transactionId: paymentId,
+      amount: parseInt(quantity),
+      timestamp: new Date(),
+      type: 'purchase',
+      description: `Purchased ${quantity} credits`
+    };
+    
+    await addCreditsToUser(userId, parseInt(quantity), transactionDetails);
 
     return res.status(200).json({ success: true });
   } catch (error) {
