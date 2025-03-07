@@ -14,8 +14,8 @@ const PurchasePage = () => {
   const [quantity, setQuantity] = useState(20);
 
   const [errorMessage, setErrorMessage] = useState('');
-  const MIN_PURCHASE_AMOUNT = 10; // $10 minimum purchase
-  const CREDIT_PRICE = 0.5; // $0.50 per credit
+  const MIN_PURCHASE_AMOUNT = 1000; // ₹1000 minimum purchase
+  const CREDIT_PRICE = 50; // ₹50 per credit
   const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 20 credits
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const PurchasePage = () => {
   useEffect(() => {
     // Validate minimum purchase amount when quantity changes
     if (quantity < MIN_CREDITS) {
-      setErrorMessage(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
+      setErrorMessage(`Minimum purchase is ₹${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
     } else {
       setErrorMessage('');
     }
@@ -99,7 +99,7 @@ const PurchasePage = () => {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
-        currency: 'USD',
+        currency: 'INR',
         name: 'Video Loop Streaming',
         description: `Purchase ${quantity} credits`,
         order_id: order.id,
@@ -217,11 +217,11 @@ const PurchasePage = () => {
               </div>
               <div className={styles.detailRow}>
                 <span>Price per credit</span>
-                <span>${CREDIT_PRICE.toFixed(2)}</span>
+                <span>₹{CREDIT_PRICE.toFixed(2)}</span>
               </div>
               <div className={styles.detailRow}>
                 <span>Total amount</span>
-                <span className={styles.total}>${(quantity * CREDIT_PRICE).toFixed(2)}</span>
+                <span className={styles.total}>₹{(quantity * CREDIT_PRICE).toFixed(2)}</span>
               </div>
               {errorMessage && (
                 <div className={styles.errorMessage}>
@@ -229,7 +229,7 @@ const PurchasePage = () => {
                 </div>
               )}
               <div className={styles.minCreditNotice}>
-                Minimum purchase: {MIN_CREDITS} credits (${MIN_PURCHASE_AMOUNT.toFixed(2)})
+                Minimum purchase: {MIN_CREDITS} credits (₹{MIN_PURCHASE_AMOUNT.toFixed(2)})
               </div>
 
               <div className={styles.paymentOptions}>
