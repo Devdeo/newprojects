@@ -1,5 +1,6 @@
 
-import Razorpay from 'razorpay';
+const Razorpay = require("razorpay");
+const shortid = require("shortid");
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,20 +20,26 @@ export default async function handler(req, res) {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    // Create order
-    const order = await razorpay.orders.create({
-      amount: Math.round(amount), // Amount in smallest currency unit (cents)
-      currency: 'USD',
-      receipt: `receipt_order_${Date.now()}`,
+    // Create order with proper options
+    const payment_capture = 1;
+    const options = {
+      amount: Math.round(amount), // Amount in smallest currency unit (paise)
+      currency: 'INR',
+      receipt: `receipt_${shortid.generate()}`,
+      payment_capture,
       notes: {
         userId: userId,
         quantity: quantity,
       },
-    });
+    };
+
+    // Create order
+    const order = await razorpay.orders.create(options);
 
     return res.status(200).json({
       id: order.id,
       amount: order.amount,
+      currency: order.currency
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);

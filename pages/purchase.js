@@ -73,6 +73,31 @@ const PurchasePage = () => {
   const handleRazorpayPayment = async () => {
     try {
       setPaymentLoading(true);
+      
+      // First, initialize Razorpay
+      const initRazorpay = () => {
+        return new Promise((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          
+          script.onload = () => {
+            resolve(true);
+          };
+          script.onerror = () => {
+            resolve(false);
+          };
+          
+          document.body.appendChild(script);
+        });
+      };
+      
+      const razorpayLoaded = await initRazorpay();
+      
+      if (!razorpayLoaded) {
+        alert('Razorpay SDK failed to load. Please try again later.');
+        setPaymentLoading(false);
+        return;
+      }
 
       // Create order on the server
       const response = await fetch('/api/create-razorpay-order', {
@@ -81,7 +106,7 @@ const PurchasePage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: quantity * CREDIT_PRICE * 100, // Amount in smallest currency unit (cents)
+          amount: quantity * CREDIT_PRICE * 100, // Amount in smallest currency unit (paise)
           userId: auth.currentUser?.uid || '',
           quantity: quantity,
         }),
@@ -99,7 +124,7 @@ const PurchasePage = () => {
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
-        currency: 'INR',
+        currency: order.currency,
         name: 'Video Loop Streaming',
         description: `Purchase ${quantity} credits`,
         order_id: order.id,
@@ -138,6 +163,7 @@ const PurchasePage = () => {
           email: auth.currentUser?.email || '',
           name: auth.currentUser?.displayName || '',
         },
+        image: '/favicon.svg',
         theme: {
           color: '#ff0000',
         },
