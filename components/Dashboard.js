@@ -564,43 +564,105 @@ const Dashboard = () => {
                           {creditBalance >= 20 && <option value="loop">Loop</option>}
                         </select>
                         {newTask.durationType === 'loop' ? (
-                          <input
-                            type="number"
-                            placeholder="Number of Loops"
-                            value={newTask.hours}
-                            onChange={(e) => {
-                              const maxLoops = Math.floor(creditBalance / 5);
-                              const inputValue = parseInt(e.target.value);
-                              if (!isNaN(inputValue) && inputValue > maxLoops) {
-                                alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
-                                setNewTask({...newTask, hours: maxLoops.toString()});
-                              } else {
-                                setNewTask({...newTask, hours: e.target.value});
-                              }
-                            }}
-                            required
-                            min="1"
-                            max={Math.floor(creditBalance / 5)}
-                          />
+                          <div className={styles.numberInputGroup}>
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue > 1) {
+                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) <= 1}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              placeholder="Number of Loops"
+                              value={newTask.hours}
+                              onChange={(e) => {
+                                const maxLoops = Math.floor(creditBalance / 5);
+                                const inputValue = parseInt(e.target.value);
+                                if (!isNaN(inputValue) && inputValue > maxLoops) {
+                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
+                                  setNewTask({...newTask, hours: maxLoops.toString()});
+                                } else {
+                                  setNewTask({...newTask, hours: e.target.value});
+                                }
+                              }}
+                              required
+                              min="1"
+                              max={Math.floor(creditBalance / 5)}
+                            />
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const maxLoops = Math.floor(creditBalance / 5);
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue < maxLoops) {
+                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
+                                } else {
+                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 5)}
+                            >
+                              +
+                            </button>
+                          </div>
                         ) : (
-                          <input
-                            type="number"
-                            placeholder="Hours"
-                            value={newTask.hours}
-                            onChange={(e) => {
-                              const maxHours = Math.floor(creditBalance / 2);
-                              const inputValue = parseInt(e.target.value);
-                              if (!isNaN(inputValue) && inputValue > maxHours) {
-                                alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
-                                setNewTask({...newTask, hours: maxHours.toString()});
-                              } else {
-                                setNewTask({...newTask, hours: e.target.value});
-                              }
-                            }}
-                            required
-                            min="1"
-                            max={Math.floor(creditBalance / 2)}
-                          />
+                          <div className={styles.numberInputGroup}>
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue > 1) {
+                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) <= 1}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              placeholder="Hours"
+                              value={newTask.hours}
+                              onChange={(e) => {
+                                const maxHours = Math.floor(creditBalance / 2);
+                                const inputValue = parseInt(e.target.value);
+                                if (!isNaN(inputValue) && inputValue > maxHours) {
+                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
+                                  setNewTask({...newTask, hours: maxHours.toString()});
+                                } else {
+                                  setNewTask({...newTask, hours: e.target.value});
+                                }
+                              }}
+                              required
+                              min="1"
+                              max={Math.floor(creditBalance / 2)}
+                            />
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const maxHours = Math.floor(creditBalance / 2);
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue < maxHours) {
+                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
+                                } else {
+                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 2)}
+                            >
+                              +
+                            </button>
+                          </div>
                         )}
                       </div>
                       <small className={styles.creditInfo}>
@@ -643,43 +705,105 @@ const Dashboard = () => {
                           {creditBalance >= 20 && <option value="loop">Loop</option>}
                         </select>
                         {newTask.durationType === 'loop' ? (
-                          <input
-                            type="number"
-                            placeholder="Number of Loops"
-                            value={newTask.hours}
-                            onChange={(e) => {
-                              const maxLoops = Math.floor(creditBalance / 5);
-                              const inputValue = parseInt(e.target.value);
-                              if (!isNaN(inputValue) && inputValue > maxLoops) {
-                                alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
-                                setNewTask({...newTask, hours: maxLoops.toString()});
-                              } else {
-                                setNewTask({...newTask, hours: e.target.value});
-                              }
-                            }}
-                            required
-                            min="1"
-                            max={Math.floor(creditBalance / 5)}
-                          />
+                          <div className={styles.numberInputGroup}>
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue > 1) {
+                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) <= 1}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              placeholder="Number of Loops"
+                              value={newTask.hours}
+                              onChange={(e) => {
+                                const maxLoops = Math.floor(creditBalance / 5);
+                                const inputValue = parseInt(e.target.value);
+                                if (!isNaN(inputValue) && inputValue > maxLoops) {
+                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
+                                  setNewTask({...newTask, hours: maxLoops.toString()});
+                                } else {
+                                  setNewTask({...newTask, hours: e.target.value});
+                                }
+                              }}
+                              required
+                              min="1"
+                              max={Math.floor(creditBalance / 5)}
+                            />
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const maxLoops = Math.floor(creditBalance / 5);
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue < maxLoops) {
+                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
+                                } else {
+                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 5)}
+                            >
+                              +
+                            </button>
+                          </div>
                         ) : (
-                          <input
-                            type="number"
-                            placeholder="Hours"
-                            value={newTask.hours}
-                            onChange={(e) => {
-                              const maxHours = Math.floor(creditBalance / 2);
-                              const inputValue = parseInt(e.target.value);
-                              if (!isNaN(inputValue) && inputValue > maxHours) {
-                                alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
-                                setNewTask({...newTask, hours: maxHours.toString()});
-                              } else {
-                                setNewTask({...newTask, hours: e.target.value});
-                              }
-                            }}
-                            required
-                            min="1"
-                            max={Math.floor(creditBalance / 2)}
-                          />
+                          <div className={styles.numberInputGroup}>
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue > 1) {
+                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) <= 1}
+                            >
+                              −
+                            </button>
+                            <input
+                              type="number"
+                              placeholder="Hours"
+                              value={newTask.hours}
+                              onChange={(e) => {
+                                const maxHours = Math.floor(creditBalance / 2);
+                                const inputValue = parseInt(e.target.value);
+                                if (!isNaN(inputValue) && inputValue > maxHours) {
+                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
+                                  setNewTask({...newTask, hours: maxHours.toString()});
+                                } else {
+                                  setNewTask({...newTask, hours: e.target.value});
+                                }
+                              }}
+                              required
+                              min="1"
+                              max={Math.floor(creditBalance / 2)}
+                            />
+                            <button 
+                              type="button"
+                              className={styles.numberInputButton}
+                              onClick={() => {
+                                const maxHours = Math.floor(creditBalance / 2);
+                                const currentValue = parseInt(newTask.hours) || 0;
+                                if (currentValue < maxHours) {
+                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
+                                } else {
+                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
+                                }
+                              }}
+                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance / 2)}
+                            >
+                              +
+                            </button>
+                          </div>
                         )}
                       </div>
                       <small className={styles.creditInfo}>
@@ -732,9 +856,7 @@ const Dashboard = () => {
               )}
             </form>
           </div>
-        )}
-
-        {activeTab === 'active-live' && (
+        )}{activeTab === 'active-live' && (
           <div>
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
             <div className={styles.tableContainer}>

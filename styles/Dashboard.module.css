@@ -334,6 +334,48 @@
   font-size: 14px;
 }
 
+.numberInputGroup {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.numberInputGroup input {
+  margin-bottom: 0;
+  border: none;
+  text-align: center;
+  width: 80px;
+  padding: 8px 0;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+}
+
+.numberInputButton {
+  background-color: #f8fafc;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  font-weight: bold;
+  height: 38px;
+  width: 38px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.numberInputButton:hover:not(:disabled) {
+  background-color: #e2e8f0;
+}
+
+.numberInputButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .checkboxGroup input {
   margin-right: 10px;
 }
