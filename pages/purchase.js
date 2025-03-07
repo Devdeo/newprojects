@@ -13,19 +13,30 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 
 const PurchasePage = () => {
   const router = useRouter();
-  const { quantity } = router.query;
+  const { quantity: initialQuantity } = router.query;
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
-
+  const [quantity, setQuantity] = useState(20);
+  
   const [errorMessage, setErrorMessage] = useState('');
   const MIN_PURCHASE_AMOUNT = 10; // $10 minimum purchase
   const CREDIT_PRICE = 0.5; // $0.50 per credit
   const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 20 credits
 
   useEffect(() => {
+    // Set initial quantity from URL parameter, ensuring it meets minimum
+    if (initialQuantity) {
+      const parsedQuantity = parseInt(initialQuantity);
+      setQuantity(parsedQuantity < MIN_CREDITS ? MIN_CREDITS : parsedQuantity);
+    } else {
+      setQuantity(MIN_CREDITS);
+    }
+  }, [initialQuantity]);
+
+  useEffect(() => {
     // Validate minimum purchase amount when quantity changes
-    if (quantity && parseInt(quantity) < MIN_CREDITS) {
+    if (quantity < MIN_CREDITS) {
       setErrorMessage(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
     } else {
       setErrorMessage('');
@@ -66,7 +77,7 @@ const PurchasePage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          quantity: parseInt(quantity || MIN_CREDITS),
+          quantity: quantity,
           unitPrice: CREDIT_PRICE,
           paymentMethod: paymentMethod,
           userId: auth.currentUser?.uid || '',
@@ -102,13 +113,21 @@ const PurchasePage = () => {
     e.preventDefault();
     
     // Check minimum purchase amount
-    if (parseInt(quantity || 1) < MIN_CREDITS) {
+    if (quantity < MIN_CREDITS) {
       alert(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
       return;
     }
     
     // Create Stripe checkout session
     await createCheckoutSession();
+  };
+  
+  const increaseQuantity = () => {
+    setQuantity(prev => prev + 1);
+  };
+  
+  const decreaseQuantity = () => {
+    setQuantity(prev => prev > MIN_CREDITS ? prev - 1 : MIN_CREDITS);
   };
 
   const renderPaymentForm = () => {
@@ -172,7 +191,24 @@ const PurchasePage = () => {
             <div className={styles.purchaseDetails}>
               <div className={styles.detailRow}>
                 <span>Quantity</span>
-                <span>{quantity || MIN_CREDITS} credit(s)</span>
+                <div className={styles.quantityControl}>
+                  <button 
+                    type="button" 
+                    onClick={decreaseQuantity}
+                    className={styles.quantityButton}
+                    disabled={quantity <= MIN_CREDITS}
+                  >
+                    -
+                  </button>
+                  <span className={styles.quantity}>{quantity} credit(s)</span>
+                  <button 
+                    type="button" 
+                    onClick={increaseQuantity}
+                    className={styles.quantityButton}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
               <div className={styles.detailRow}>
                 <span>Price per credit</span>
@@ -180,13 +216,16 @@ const PurchasePage = () => {
               </div>
               <div className={styles.detailRow}>
                 <span>Total amount</span>
-                <span className={styles.total}>${((quantity || MIN_CREDITS) * CREDIT_PRICE).toFixed(2)}</span>
+                <span className={styles.total}>${(quantity * CREDIT_PRICE).toFixed(2)}</span>
               </div>
               {errorMessage && (
                 <div className={styles.errorMessage}>
                   {errorMessage}
                 </div>
               )}
+              <div className={styles.minCreditNotice}>
+                Minimum purchase: {MIN_CREDITS} credits (${MIN_PURCHASE_AMOUNT.toFixed(2)})
+              </div>
               
               <div className={styles.paymentOptions}>
                 <h3>Secure Payment with Stripe</h3>
