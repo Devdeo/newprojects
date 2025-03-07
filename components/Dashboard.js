@@ -464,6 +464,18 @@ const Dashboard = () => {
                   onChange={handleVideoChange}
                   required
                 />
+                {isFileUploaded && (
+                  <div className={styles.fileDetails}>
+                    <h4>Video File Details</h4>
+                    <ul>
+                      <li><strong>File Name:</strong> {videoFile.name}</li>
+                      <li><strong>Size:</strong> {fileDetails.size || 'Calculating...'}</li>
+                      <li><strong>Duration:</strong> {fileDetails.duration || 'Calculating...'}</li>
+                      <li><strong>Format:</strong> {fileDetails.format || 'Detecting...'}</li>
+                    </ul>
+                  </div>
+                )}
+                
                 {isUploading && (
                   <div className={styles.fileUploadStatus}>
                     <div className={styles.progressBar}>
@@ -474,11 +486,7 @@ const Dashboard = () => {
                     </div>
                     <p className={styles.uploadingMessage}>
                       {uploadStatus === 'processing' ? 'Processing video file...' : 'Uploading video...'} {uploadProgress}% complete
-                      {videoFile && <span> - File: {videoFile.name}</span>}
                     </p>
-                    {fileDetails.duration && (
-                      <p>Duration: {fileDetails.duration}, Size: {fileDetails.size}, Format: {fileDetails.format}</p>
-                    )}
                   </div>
                 )}
               </div>
