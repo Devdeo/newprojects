@@ -576,13 +576,15 @@ const Dashboard = () => {
                         )}
                       </div>
                     </div>
-                    <div className={styles.formGroup}>
-                      <label>End Date/Time (Optional)</label>
-                      <input
-                        type="datetime-local"
-                        onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
-                      />
-                    </div>
+                    {isFileUploaded && (
+                      <div className={styles.formGroup}>
+                        <label>End Date/Time (Optional)</label>
+                        <input
+                          type="datetime-local"
+                          onChange={(e) => setNewTask({...newTask, endTime: e.target.value})}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
