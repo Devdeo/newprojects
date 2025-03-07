@@ -1,25 +1,18 @@
-
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import Navbar from '../components/Navbar';
 import styles from '../styles/Page.module.css';
-
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const PurchasePage = () => {
   const router = useRouter();
   const { quantity: initialQuantity } = router.query;
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('card');
   const [quantity, setQuantity] = useState(20);
-  
+
   const [errorMessage, setErrorMessage] = useState('');
   const MIN_PURCHASE_AMOUNT = 10; // $10 minimum purchase
   const CREDIT_PRICE = 0.5; // $0.50 per credit
@@ -52,57 +45,112 @@ const PurchasePage = () => {
           router.push('/');
           return;
         }
-        
+
         // Check if email verification is required (doesn't apply to OAuth providers)
         const isEmailProvider = user.providerData[0]?.providerId === 'password';
         if (isEmailProvider && !user.emailVerified) {
           router.push('/dashboard');
           return;
         }
-        
+
         setLoading(false);
       });
       return () => unsubscribe();
     };
     checkAuth();
+
+    // Load Razorpay script
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
-  const createCheckoutSession = async () => {
+  const handleRazorpayPayment = async () => {
     try {
       setPaymentLoading(true);
-      
-      // Fetch checkout session from your server
-      const response = await fetch('/api/create-checkout-session', {
+
+      // Create order on the server
+      const response = await fetch('/api/create-razorpay-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          quantity: quantity,
-          unitPrice: CREDIT_PRICE,
-          paymentMethod: paymentMethod,
+          amount: quantity * CREDIT_PRICE * 100, // Amount in smallest currency unit (cents)
           userId: auth.currentUser?.uid || '',
+          quantity: quantity,
         }),
       });
-      
-      const session = await response.json();
-      
-      if (session.error) {
-        alert(session.error);
+
+      const order = await response.json();
+
+      if (order.error) {
+        alert(order.error);
         setPaymentLoading(false);
         return;
       }
-      
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
-      
-      if (error) {
-        alert(error.message);
-        setPaymentLoading(false);
-      }
+
+      // Initialize Razorpay payment
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: 'USD',
+        name: 'Video Loop Streaming',
+        description: `Purchase ${quantity} credits`,
+        order_id: order.id,
+        handler: async function (response) {
+          try {
+            // Verify payment on the server
+            const verifyResponse = await fetch('/api/verify-razorpay-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                orderId: order.id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                userId: auth.currentUser?.uid || '',
+                quantity: quantity,
+              }),
+            });
+
+            const data = await verifyResponse.json();
+
+            if (data.success) {
+              router.push('/dashboard?payment_success=true');
+            } else {
+              alert('Payment verification failed. Please contact support.');
+              setPaymentLoading(false);
+            }
+          } catch (error) {
+            console.error('Verification error:', error);
+            alert('Payment verification failed. Please contact support.');
+            setPaymentLoading(false);
+          }
+        },
+        prefill: {
+          email: auth.currentUser?.email || '',
+          name: auth.currentUser?.displayName || '',
+        },
+        theme: {
+          color: '#ff0000',
+        },
+        modal: {
+          ondismiss: function() {
+            setPaymentLoading(false);
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+
     } catch (error) {
       console.error('Payment error:', error);
       alert('Payment failed. Please try again.');
@@ -112,153 +160,23 @@ const PurchasePage = () => {
 
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
-    
+
     // Check minimum purchase amount
     if (quantity < MIN_CREDITS) {
       alert(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
       return;
     }
-    
-    // Create Stripe checkout session
-    await createCheckoutSession();
+
+    // Create Razorpay payment
+    await handleRazorpayPayment();
   };
-  
+
   const increaseQuantity = () => {
     setQuantity(prev => prev + 1);
   };
-  
+
   const decreaseQuantity = () => {
     setQuantity(prev => prev > MIN_CREDITS ? prev - 1 : MIN_CREDITS);
-  };
-
-  // Stripe CardElement checkout form component
-  const CheckoutForm = ({ quantity, totalAmount }) => {
-    const stripe = useStripe();
-    const elements = useElements();
-    const router = useRouter();
-    const [error, setError] = useState('');
-    const [processing, setProcessing] = useState(false);
-    const [postalCode, setPostalCode] = useState('');
-    
-    const handleSubmit = async (event) => {
-      event.preventDefault();
-      
-      if (!stripe || !elements) {
-        return;
-      }
-      
-      setProcessing(true);
-      setError('');
-      
-      try {
-        // Create payment intent on the server
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            amount: Math.round(totalAmount * 100), // Convert to cents
-            userId: auth.currentUser?.uid || '',
-            quantity: quantity
-          }),
-        });
-        
-        const { clientSecret, error: intentError } = await response.json();
-        
-        if (intentError) {
-          setError(intentError);
-          setProcessing(false);
-          return;
-        }
-        
-        // Confirm card payment with Stripe
-        const result = await stripe.confirmCardPayment(clientSecret, {
-          payment_method: { 
-            card: elements.getElement(CardElement),
-            billing_details: {
-              address: {
-                postal_code: postalCode
-              }
-            }
-          }
-        });
-        
-        if (result.error) {
-          setError(result.error.message);
-          setProcessing(false);
-        } else {
-          // Payment successful, redirect to dashboard
-          router.push('/dashboard?payment_success=true');
-        }
-      } catch (err) {
-        console.error('Payment error:', err);
-        setError('An unexpected error occurred. Please try again.');
-        setProcessing(false);
-      }
-    };
-    
-    return (
-      <form onSubmit={handleSubmit} className={styles.paymentForm}>
-        <div className={styles.cardElementContainer}>
-          <label className={styles.cardLabel}>
-            Card Details
-          </label>
-          <div className={styles.formGroup}>
-            <input
-              type="text"
-              placeholder="Postal Code / ZIP"
-              className={styles.postalCodeInput}
-              onChange={(e) => setPostalCode(e.target.value)}
-            />
-          </div>
-          <CardElement 
-            options={{
-              style: {
-                base: {
-                  fontSize: '16px',
-                  color: '#fff',
-                  '::placeholder': {
-                    color: '#aab7c4',
-                  },
-                },
-                invalid: {
-                  color: '#fa755a',
-                  iconColor: '#fa755a',
-                },
-              },
-              hidePostalCode: true,
-            }}
-            className={styles.cardElement}
-          />
-        </div>
-        
-        {error && <div className={styles.errorMessage}>{error}</div>}
-        
-        <button 
-          type="submit" 
-          className={styles.payButton}
-          disabled={!stripe || processing}
-        >
-          {processing ? (
-            <>
-              <span className={styles.loadingSpinner}></span>
-              Processing...
-            </>
-          ) : (
-            'Pay Now'
-          )}
-        </button>
-      </form>
-    );
-  };
-  
-  const renderPaymentForm = () => {
-    const totalAmount = quantity * CREDIT_PRICE;
-    
-    return (
-      <Elements stripe={stripePromise}>
-        <CheckoutForm quantity={quantity} totalAmount={totalAmount} />
-      </Elements>
-    );
   };
 
   return (
@@ -313,17 +231,31 @@ const PurchasePage = () => {
               <div className={styles.minCreditNotice}>
                 Minimum purchase: {MIN_CREDITS} credits (${MIN_PURCHASE_AMOUNT.toFixed(2)})
               </div>
-              
+
               <div className={styles.paymentOptions}>
-                <h3>Secure Payment with Stripe</h3>
+                <h3>Secure Payment with Razorpay</h3>
                 <p className={styles.paymentInfo}>
-                  Select your preferred payment method. You'll be redirected to Stripe's secure payment page to complete your transaction.
+                  Click the button below to complete your transaction securely through Razorpay.
                 </p>
               </div>
-              
-              {/* Payment form based on selected method */}
-              {!loading && renderPaymentForm()}
-              
+
+              {!loading && (
+                <button 
+                  onClick={handleSubmitPayment} 
+                  className={styles.payButton}
+                  disabled={paymentLoading}
+                >
+                  {paymentLoading ? (
+                    <>
+                      <span className={styles.loadingSpinner}></span>
+                      Processing...
+                    </>
+                  ) : (
+                    'Pay Now'
+                  )}
+                </button>
+              )}
+
               {loading && (
                 <div className={styles.loadingContainer}>
                   <span className={styles.loadingSpinner}></span>
