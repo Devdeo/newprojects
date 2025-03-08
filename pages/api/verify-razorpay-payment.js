@@ -1,7 +1,7 @@
 import { db } from "../../firebase/config";
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 const crypto = require("crypto");
-
+import { useAuthState } from "react-firebase-hooks/auth";
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     // Update user's credits
     try {
       // Get current user credit info
-      const userDocRef = doc(db, "users", userId);
+      const userDocRef = query(collection(db, "users"), where("uid", "==", user.uid));
       const userDoc = await getDoc(userDocRef);
 
       let currentCredits = 0;
