@@ -1,43 +1,6 @@
 import crypto from 'crypto';
-
-export default async function handler(req, res) {
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, amount, quantity } = req.body;
-
-    // Verify signature
-    const text = `${razorpay_order_id}|${razorpay_payment_id}`;
-    const generatedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(text)
-      .digest('hex');
-    
-    
-
-    
-      console.log('Signature verification failed');
-      return res.status(400).json({ error: 'Payment verification failed' });
-    
-
-    // Get the user document from Firestore
-    
-
-    
-
-    // Update user's credit balance
-    
-
-    // Add transaction record
-
-    
-
-const crypto = require('crypto');
-const { doc, updateDoc, increment, collection, addDoc, serverTimestamp } = require('firebase/firestore');
-const { db } = require('../../firebase/config');
+import { doc, updateDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -46,21 +9,21 @@ export default async function handler(req, res) {
 
   try {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature, userId, amount, quantity } = req.body;
-    
+
     // Verify the payment signature
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
-    
+
     const isAuthentic = generatedSignature === razorpay_signature;
-    
+
     if (!isAuthentic) {
       console.log('Signature verification failed');
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
-    // Get the user document from Firestore
+    // Get the user document from Firestore and update
     try {
       // Update user document with new credit balance
       const userRef = doc(db, 'users', userId);
@@ -68,7 +31,7 @@ export default async function handler(req, res) {
         creditBalance: increment(quantity),
         lastWalletUpdate: serverTimestamp()
       });
-      
+
       // Add transaction record
       await addDoc(collection(db, 'users', userId, 'transactions'), {
         type: 'credit_purchase',
@@ -78,7 +41,7 @@ export default async function handler(req, res) {
         orderId: razorpay_order_id,
         timestamp: serverTimestamp()
       });
-      
+
       return res.status(200).json({ 
         success: true,
         message: 'Payment verified and credits added successfully' 
