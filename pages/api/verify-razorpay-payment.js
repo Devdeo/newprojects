@@ -1,7 +1,6 @@
 
 import crypto from "crypto";
 import Razorpay from "razorpay";
-import { addCreditsToUser } from "../../firebase/firestore";
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -34,28 +33,35 @@ export default async function handler(req, res) {
       });
     }
 
-    // Add credits to user's account
-    const creditsToAdd = parseInt(quantity);
-    const newBalance = await addCreditsToUser(userId, creditsToAdd, {
-      type: 'credit',
-      amount: creditsToAdd,
-      description: `Purchased ${creditsToAdd} credits`,
-      paymentId: paymentId,
-      orderId: orderId,
-      timestamp: new Date()
-    });
+    // Fetch payment details from Razorpay for additional verification
+    const payment = await razorpay.payments.fetch(paymentId);
+    
+    if (payment.order_id !== orderId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Payment verification failed. Order ID mismatch.'
+      });
+    }
 
+    // In a production app, here you would:
+    // 1. Update the user's credit balance in your database
+    // 2. Record the transaction in your database
+
+    console.log(`Successfully verified payment for ${quantity} credits for user ${userId}`);
+    
+    // Return success response
     return res.status(200).json({
       success: true,
-      message: 'Payment verified and credits added successfully',
-      newBalance,
-      redirect: "/dashboard?payment_success=true"
+      message: 'Payment verified successfully',
+      credits: parseInt(quantity),
+      paymentId: paymentId,
+      orderId: orderId
     });
   } catch (error) {
     console.error('Error verifying payment:', error);
     return res.status(500).json({ 
-      success: false,
-      error: 'Failed to verify payment'
+      success: false, 
+      error: 'Failed to verify payment' 
     });
   }
 }

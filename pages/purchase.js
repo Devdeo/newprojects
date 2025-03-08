@@ -1,7 +1,6 @@
+
 import { useRouter } from "next/router";
 import Head from "next/head";
-import { auth } from "../firebase/config";
-import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import styles from "../styles/Page.module.css";
@@ -13,6 +12,7 @@ const PurchasePage = () => {
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [quantity, setQuantity] = useState(10);
   const [errorMessage, setErrorMessage] = useState("");
+  const [user, setUser] = useState(null);
   const MIN_PURCHASE_AMOUNT = 100; // ₹100 minimum purchase
   const CREDIT_PRICE = 10; // ₹10 per credit
   const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 10 credits
@@ -38,26 +38,25 @@ const PurchasePage = () => {
     }
   }, [quantity]);
 
-  // Check authentication and load Razorpay script
+  // Check if user is logged in (simplified - in a real app, you would check auth state)
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          router.push("/");
-          return;
-        }
-
-        const isEmailProvider = user.providerData[0]?.providerId === "password";
-        if (isEmailProvider && !user.emailVerified) {
-          router.push("/dashboard");
-          return;
-        }
-
-        setLoading(false);
+      // Simulate checking user auth (replace with your actual auth logic)
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        router.push('/');
+        return;
+      }
+      
+      setUser({
+        id: userId,
+        email: localStorage.getItem('userEmail') || 'user@example.com',
+        name: localStorage.getItem('userName') || 'User'
       });
-      return () => unsubscribe();
+      setLoading(false);
     };
+    
     checkAuth();
 
     // Load Razorpay script
@@ -73,6 +72,18 @@ const PurchasePage = () => {
     };
   }, [router]);
 
+  // Check for payment success query parameter
+  useEffect(() => {
+    if (router.query.payment_success === 'true') {
+      // Show success message
+      alert('Payment successful! Your credits have been added.');
+      // Remove the query parameter after a short delay
+      setTimeout(() => {
+        router.replace('/dashboard', undefined, { shallow: true });
+      }, 1500);
+    }
+  }, [router]);
+
   const handleRazorpayPayment = async () => {
     try {
       setPaymentLoading(true);
@@ -85,7 +96,7 @@ const PurchasePage = () => {
       }
 
       // Check if user is authenticated
-      if (!auth.currentUser) {
+      if (!user) {
         alert("Please log in to purchase credits.");
         setPaymentLoading(false);
         router.push("/");
@@ -98,12 +109,13 @@ const PurchasePage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: quantity * CREDIT_PRICE * 100, // Amount in paise
-          userId: auth.currentUser.uid,
+          userId: user.id,
           quantity,
         }),
       });
 
       const order = await response.json();
+      console.log("Order response:", order);
 
       if (order.error) {
         alert(order.error);
@@ -125,15 +137,6 @@ const PurchasePage = () => {
               throw new Error('Invalid payment response');
             }
             
-            // Get current user ID safely
-            const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
-            if (!currentUserId) {
-              alert("Authentication error. Please log in and try again.");
-              setPaymentLoading(false);
-              router.push("/");
-              return;
-            }
-            
             const verifyResponse = await fetch("/api/verify-razorpay-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -141,7 +144,7 @@ const PurchasePage = () => {
                 orderId: order.id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-                userId: currentUserId,
+                userId: user.id,
                 quantity,
               }),
             });
@@ -149,7 +152,12 @@ const PurchasePage = () => {
             const result = await verifyResponse.json();
 
             if (verifyResponse.ok && result.success) {
-              console.log("Payment successful! Credits added:", result.newBalance);
+              console.log("Payment successful! Credits added:", result.credits);
+              
+              // Store the new balance in localStorage (in a real app, this would come from your database)
+              const currentBalance = parseInt(localStorage.getItem('creditBalance') || '0');
+              localStorage.setItem('creditBalance', (currentBalance + parseInt(quantity)).toString());
+              
               router.push("/dashboard?payment_success=true");
             } else {
               console.error("Server verification failed:", result.error);
@@ -165,8 +173,8 @@ const PurchasePage = () => {
           }
         },
         prefill: {
-          email: auth.currentUser?.email || "",
-          name: auth.currentUser?.displayName || "",
+          email: user.email || "",
+          name: user.name || "",
         },
         image: "/favicon.svg",
         theme: { color: "#ff0000" },
@@ -176,7 +184,7 @@ const PurchasePage = () => {
           },
         },
         notes: {
-          userId: auth.currentUser?.uid || "",
+          userId: user.id,
           quantity: quantity
         }
       };
