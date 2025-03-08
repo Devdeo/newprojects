@@ -1,3 +1,4 @@
+
 import {
   getFirestore,
   collection,
@@ -16,7 +17,11 @@ export const addCreditsToUser = async (
   transactionDetails = null,
 ) => {
   try {
-    const userRef = doc(db, "users", auth.currentUser.uid);
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    const userRef = doc(db, "users", userId);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
@@ -37,7 +42,7 @@ export const addCreditsToUser = async (
 
     // If transaction details are provided, store the transaction in history
     if (transactionDetails) {
-      const transactionsRef = collection(db, "users", auth.currentUser.uid, "transactions");
+      const transactionsRef = collection(db, "users", userId, "transactions");
       await addDoc(transactionsRef, {
         ...transactionDetails,
         previousBalance: currentCredits,

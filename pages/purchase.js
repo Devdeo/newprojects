@@ -84,13 +84,21 @@ const PurchasePage = () => {
         return;
       }
 
+      // Check if user is authenticated
+      if (!auth.currentUser) {
+        alert("Please log in to purchase credits.");
+        setPaymentLoading(false);
+        router.push("/");
+        return;
+      }
+
       // Create order on the server
       const response = await fetch("/api/create-razorpay-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: quantity * CREDIT_PRICE * 100, // Amount in paise
-          userId: auth.currentUser?.uid || "",
+          userId: auth.currentUser.uid,
           quantity,
         }),
       });
@@ -117,6 +125,15 @@ const PurchasePage = () => {
               throw new Error('Invalid payment response');
             }
             
+            // Get current user ID safely
+            const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
+            if (!currentUserId) {
+              alert("Authentication error. Please log in and try again.");
+              setPaymentLoading(false);
+              router.push("/");
+              return;
+            }
+            
             const verifyResponse = await fetch("/api/verify-razorpay-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -124,7 +141,7 @@ const PurchasePage = () => {
                 orderId: order.id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-                userId: auth.currentUser?.uid || "",
+                userId: currentUserId,
                 quantity,
               }),
             });
