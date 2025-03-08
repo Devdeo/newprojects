@@ -32,8 +32,10 @@ export default async function handler(req, res) {
         lastWalletUpdate: serverTimestamp()
       });
 
-      // Add transaction record
-      await addDoc(collection(db, 'users', userId, 'transactions'), {
+      // Add transaction record - ensuring we add it to the proper collection path
+      // This follows the security rule: match /users/{uid}/transactions/{transaction}
+      const transactionsRef = collection(db, 'users', userId, 'transactions');
+      await addDoc(transactionsRef, {
         type: 'credit_purchase',
         amount: amount,
         quantity: quantity,
@@ -48,9 +50,14 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error('Firebase update error:', error);
+      // Check for permission-denied errors that might be related to security rules
+      const errorMessage = error.code === 'permission-denied' 
+        ? 'Permission denied: Please check security rules' 
+        : error.message;
+      
       return res.status(500).json({ 
         error: 'Database update failed', 
-        message: error.message 
+        message: errorMessage
       });
     }
   } catch (error) {
