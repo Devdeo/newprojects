@@ -1,10 +1,10 @@
-import { useRouter } from 'next/router';
-import Head from 'next/head';
-import { auth } from '../firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import styles from '../styles/Page.module.css';
+import { useRouter } from "next/router";
+import Head from "next/head";
+import { auth } from "../firebase/config";
+import { onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import styles from "../styles/Page.module.css";
 
 const PurchasePage = () => {
   const router = useRouter();
@@ -12,14 +12,13 @@ const PurchasePage = () => {
   const [loading, setLoading] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [quantity, setQuantity] = useState(10);
-
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
   const MIN_PURCHASE_AMOUNT = 100; // ₹100 minimum purchase
   const CREDIT_PRICE = 10; // ₹10 per credit
   const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 10 credits
 
+  // Load initial quantity from URL and enforce minimum
   useEffect(() => {
-    // Set initial quantity from URL parameter, ensuring it meets minimum
     if (initialQuantity) {
       const parsedQuantity = parseInt(initialQuantity);
       setQuantity(parsedQuantity < MIN_CREDITS ? MIN_CREDITS : parsedQuantity);
@@ -28,28 +27,30 @@ const PurchasePage = () => {
     }
   }, [initialQuantity]);
 
+  // Validate quantity against minimum purchase
   useEffect(() => {
-    // Validate minimum purchase amount when quantity changes
     if (quantity < MIN_CREDITS) {
-      setErrorMessage(`Minimum purchase is ₹${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
+      setErrorMessage(
+        `Minimum purchase is ₹${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`,
+      );
     } else {
-      setErrorMessage('');
+      setErrorMessage("");
     }
   }, [quantity]);
 
+  // Check authentication and load Razorpay script
   useEffect(() => {
     const checkAuth = async () => {
       setLoading(true);
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (!user) {
-          router.push('/');
+          router.push("/");
           return;
         }
 
-        // Check if email verification is required (doesn't apply to OAuth providers)
-        const isEmailProvider = user.providerData[0]?.providerId === 'password';
+        const isEmailProvider = user.providerData[0]?.providerId === "password";
         if (isEmailProvider && !user.emailVerified) {
-          router.push('/dashboard');
+          router.push("/dashboard");
           return;
         }
 
@@ -60,55 +61,37 @@ const PurchasePage = () => {
     checkAuth();
 
     // Load Razorpay script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
-  }, []);
+  }, [router]);
 
   const handleRazorpayPayment = async () => {
     try {
       setPaymentLoading(true);
 
-      // First, initialize Razorpay
-      const initRazorpay = () => {
-        return new Promise((resolve) => {
-          const script = document.createElement('script');
-          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-
-          script.onload = () => {
-            resolve(true);
-          };
-          script.onerror = () => {
-            resolve(false);
-          };
-
-          document.body.appendChild(script);
-        });
-      };
-
-      const razorpayLoaded = await initRazorpay();
-
-      if (!razorpayLoaded) {
-        alert('Razorpay SDK failed to load. Please try again later.');
+      // Check if Razorpay script is loaded
+      if (!window.Razorpay) {
+        alert("Razorpay SDK failed to load. Please try again later.");
         setPaymentLoading(false);
         return;
       }
 
       // Create order on the server
-      const response = await fetch('/api/create-razorpay-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/create-razorpay-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: quantity * CREDIT_PRICE * 100, // Amount in smallest currency unit (paise)
-          userId: auth.currentUser?.uid || '',
-          quantity: quantity,
+          amount: quantity * CREDIT_PRICE * 100, // Amount in paise
+          userId: auth.currentUser?.uid || "",
+          quantity,
         }),
       });
 
@@ -125,23 +108,20 @@ const PurchasePage = () => {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
-        name: 'Video Loop Streaming',
+        name: "Video Loop Streaming",
         description: `Purchase ${quantity} credits`,
         order_id: order.id,
-        handler: async function (response) {
+        handler: async (response) => {
           try {
-            // Verify payment on the server
-            const verifyResponse = await fetch('/api/verify-razorpay-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+            const verifyResponse = await fetch("/api/verify-razorpay-payment", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 orderId: order.id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
-                userId: auth.currentUser?.uid || '',
-                quantity: quantity,
+                userId: auth.currentUser?.uid || "",
+                quantity,
               }),
             });
 
@@ -152,66 +132,54 @@ const PurchasePage = () => {
             const result = await verifyResponse.json();
 
             if (result.success) {
-              // Payment was successful, redirect to dashboard
-              router.push('/dashboard?payment_success=true');
+              router.push("/dashboard?payment_success=true");
             } else {
-              // Server returned success: false
-              console.error('Server verification failed:', result.error);
-              alert('Payment verification failed. Please contact support.');
+              console.error("Server verification failed:", result.error);
+              alert(
+                `Payment verification failed: ${result.error || "Unknown error"}. Please contact support.`,
+              );
               setPaymentLoading(false);
             }
           } catch (error) {
-            // Handle any exceptions during verification process
-            console.error('Verification error:', error);
-            alert('Payment verification failed. Please contact support.');
+            console.error("Verification error:", error);
+            alert("Payment verification failed. Please contact support.");
             setPaymentLoading(false);
           }
         },
         prefill: {
-          email: auth.currentUser?.email || '',
-          name: auth.currentUser?.displayName || '',
+          email: auth.currentUser?.email || "",
+          name: auth.currentUser?.displayName || "",
         },
-        image: '/favicon.svg',
-        theme: {
-          color: '#ff0000',
-        },
+        image: "/favicon.svg",
+        theme: { color: "#ff0000" },
         modal: {
-          ondismiss: function() {
-            setPaymentLoading(false);
-          }
-        }
+          ondismiss: () => setPaymentLoading(false),
+        },
       };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
     } catch (error) {
-      console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
+      console.error("Payment error:", error);
+      alert("Payment failed. Please try again.");
       setPaymentLoading(false);
     }
   };
 
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
-
-    // Check minimum purchase amount
     if (quantity < MIN_CREDITS) {
-      alert(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
+      alert(
+        `Minimum purchase is ₹${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`,
+      );
       return;
     }
-
-    // Create Razorpay payment
     await handleRazorpayPayment();
   };
 
-  const increaseQuantity = () => {
-    setQuantity(prev => prev + 1);
-  };
-
-  const decreaseQuantity = () => {
-    setQuantity(prev => prev > MIN_CREDITS ? prev - 1 : MIN_CREDITS);
-  };
+  const increaseQuantity = () => setQuantity((prev) => prev + 1);
+  const decreaseQuantity = () =>
+    setQuantity((prev) => (prev > MIN_CREDITS ? prev - 1 : MIN_CREDITS));
 
   return (
     <div className={styles.container}>
@@ -225,14 +193,16 @@ const PurchasePage = () => {
           <div className={styles.purchaseCard}>
             <div className={styles.purchaseHeader}>
               <h1>Purchase Credits</h1>
-              <p className={styles.subtitle}>Secure payment options available</p>
+              <p className={styles.subtitle}>
+                Secure payment options available
+              </p>
             </div>
             <div className={styles.purchaseDetails}>
               <div className={styles.detailRow}>
                 <span>Quantity</span>
                 <div className={styles.quantityControl}>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={decreaseQuantity}
                     className={styles.quantityButton}
                     disabled={quantity <= MIN_CREDITS}
@@ -240,8 +210,8 @@ const PurchasePage = () => {
                     -
                   </button>
                   <span className={styles.quantity}>{quantity} credit(s)</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={increaseQuantity}
                     className={styles.quantityButton}
                   >
@@ -255,27 +225,27 @@ const PurchasePage = () => {
               </div>
               <div className={styles.detailRow}>
                 <span>Total amount</span>
-                <span className={styles.total}>₹{(quantity * CREDIT_PRICE).toFixed(2)}</span>
+                <span className={styles.total}>
+                  ₹{(quantity * CREDIT_PRICE).toFixed(2)}
+                </span>
               </div>
               {errorMessage && (
-                <div className={styles.errorMessage}>
-                  {errorMessage}
-                </div>
+                <div className={styles.errorMessage}>{errorMessage}</div>
               )}
               <div className={styles.minCreditNotice}>
-                Minimum purchase: {MIN_CREDITS} credits (₹{MIN_PURCHASE_AMOUNT.toFixed(2)})
+                Minimum purchase: {MIN_CREDITS} credits (₹
+                {MIN_PURCHASE_AMOUNT.toFixed(2)})
               </div>
-
               <div className={styles.paymentOptions}>
                 <h3>Secure Payment with Razorpay</h3>
                 <p className={styles.paymentInfo}>
-                  Click the button below to complete your transaction securely through Razorpay.
+                  Click the button below to complete your transaction securely
+                  through Razorpay.
                 </p>
               </div>
-
               {!loading && (
-                <button 
-                  onClick={handleSubmitPayment} 
+                <button
+                  onClick={handleSubmitPayment}
                   className={styles.payButton}
                   disabled={paymentLoading}
                 >
@@ -285,11 +255,10 @@ const PurchasePage = () => {
                       Processing...
                     </>
                   ) : (
-                    'Pay Now'
+                    "Pay Now"
                   )}
                 </button>
               )}
-
               {loading && (
                 <div className={styles.loadingContainer}>
                   <span className={styles.loadingSpinner}></span>
