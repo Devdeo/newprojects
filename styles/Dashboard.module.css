@@ -907,3 +907,18 @@
 .addCreditsButton:hover {
   box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
 }
+.addCreditButton {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 10px 0;
+  transition: background-color 0.3s;
+}
+
+.addCreditButton:hover {
+  background-color: #45a049;
+}

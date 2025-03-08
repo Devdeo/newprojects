@@ -31,6 +31,7 @@ const Dashboard = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+  const router = useRouter();
   const [userInfo, setUserInfo] = useState({ name: '', email: '' });
   const [newTask, setNewTask] = useState({
     title: '',
@@ -64,6 +65,11 @@ const Dashboard = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+  
+  // Add credit button handler
+  const handleAddCredit = () => {
+    router.push('/purchase');
   };
 
   const getVideoFormat = (fileName) => {
@@ -1187,3 +1193,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+  const handleAddCredit = () => {
+    router.push('/purchase');
+  };
