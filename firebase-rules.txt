@@ -12,6 +12,15 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
+    
+    // For server operations (API routes)
+    match /users/{userId} {
+      // Allow server operations
+      allow read, write: if true;
+      
+      match /transactions/{transactionId} {
+        allow read, write: if true;
+      }
+    }
   }
 }
-

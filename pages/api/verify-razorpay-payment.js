@@ -21,6 +21,7 @@ export default async function handler(req, res) {
     const isAuthentic = generatedSignature === razorpay_signature;
 
     if (!isAuthentic) {
+      console.log('Signature verification failed');
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
@@ -29,6 +30,7 @@ export default async function handler(req, res) {
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
+      console.log('User not found:', userId);
       return res.status(404).json({ error: 'User not found' });
     }
 
@@ -45,27 +47,24 @@ export default async function handler(req, res) {
     // Add transaction record
     const transactionRef = collection(db, 'users', userId, 'transactions');
     await addDoc(transactionRef, {
-      amount: parseInt(quantity),
       type: 'credit',
-      description: `Added ${quantity} credits via Razorpay`,
+      amount: parseInt(amount) / 100, // Convert paise to INR
+      credits: parseInt(quantity),
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
-      timestamp: serverTimestamp(),
-      balance: newBalance
+      timestamp: serverTimestamp()
     });
 
-    console.log(`Updated user ${userId} balance from ${currentBalance} to ${newBalance}`);
-
-    return res.status(200).json({
+    return res.status(200).json({ 
       success: true,
-      message: 'Payment verified successfully',
-      newBalance: newBalance
+      message: 'Payment verified and credits added successfully',
+      newBalance
     });
   } catch (error) {
     console.error('Error verifying payment:', error);
     return res.status(500).json({ 
-      error: 'Failed to verify payment',
-      details: error.message
+      error: 'Payment verification failed', 
+      message: error.message 
     });
   }
 }
