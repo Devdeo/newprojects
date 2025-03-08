@@ -26,8 +26,6 @@ export default async function handler(req, res) {
 
     try {
       // Get the current date for the transaction
-      const today = new Date();
-      const formattedDate = today.toISOString().split('T')[0];
       
       // Query the user document by UID
       const q = query(collection(db, "users"), where("uid", "==", userId));
@@ -38,11 +36,7 @@ export default async function handler(req, res) {
         const userRef = doc(db, "users", docs.docs[0].id);
         await updateDoc(userRef, {
           creditBalance: increment(quantity),
-          plan: 'paid',
-          date: formattedDate,
-          odid: razorpay_order_id,
-          payid: razorpay_payment_id,
-          lastUpdated: serverTimestamp()
+          
         });
         
         // Add transaction record to subcollection
