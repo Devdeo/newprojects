@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import styles from '../styles/PricingCard.module.css';
 import LoginForm from './LoginForm';
 import { auth } from '../firebase/config';
-import { createUserSubscription } from '../firebase/firestore';
+
 import { onAuthStateChanged } from 'firebase/auth';
 
 const PricingCard = ({ title, price, features }) => {
