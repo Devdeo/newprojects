@@ -53,11 +53,13 @@ export const addCreditsToUser = async (userId, creditsToAdd, transactionDetails 
     const userData = userDoc.data();
     const currentCredits = userData.creditBalance || 0;
     const newCreditBalance = currentCredits + creditsToAdd;
+    const updateTime = new Date();
     
     // Update user's credit balance
     await updateDoc(userRef, {
       creditBalance: newCreditBalance,
-      lastUpdated: new Date()
+      lastUpdated: updateTime,
+      lastWalletUpdate: updateTime
     });
     
     // If transaction details are provided, store the transaction in history
@@ -66,7 +68,8 @@ export const addCreditsToUser = async (userId, creditsToAdd, transactionDetails 
       await addDoc(transactionsRef, {
         ...transactionDetails,
         previousBalance: currentCredits,
-        newBalance: newCreditBalance
+        newBalance: newCreditBalance,
+        walletTimestamp: updateTime
       });
     }
     

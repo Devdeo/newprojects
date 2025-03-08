@@ -27,12 +27,15 @@ export default async function handler(req, res) {
     }
 
     // Payment is valid, add credits to user with transaction details
+    const walletUpdateTime = new Date();
     const transactionDetails = {
       transactionId: paymentId,
       amount: parseInt(quantity),
-      timestamp: new Date(),
+      timestamp: walletUpdateTime,
+      walletUpdateTime: walletUpdateTime,
       type: 'purchase',
-      description: `Purchased ${quantity} credits`
+      description: `Purchased ${quantity} credits`,
+      paymentMethod: 'razorpay'
     };
     
     await addCreditsToUser(userId, parseInt(quantity), transactionDetails);
