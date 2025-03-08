@@ -1,7 +1,4 @@
-
 import crypto from 'crypto';
-import { doc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase/config';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,7 +6,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, userId, amount, quantity } = req.body;
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
 
     // Verify the payment signature
     const generatedSignature = crypto
@@ -24,49 +21,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
-    try {
-      // Get the current date for the transaction
-      
-      // Query the user document by UID
-      const q = query(collection(db, "users"), where("uid", "==", userId));
-      const docs = await getDocs(q);
-      
-      if (docs.docs.length === 1) {
-        // Update the main user document
-        const userRef = doc(db, "users", docs.docs[0].id);
-        await updateDoc(userRef, {
-          creditBalance: increment(quantity),
-          
-        });
-        
-        // Add transaction record to subcollection
-        const transactionsRef = collection(userRef, 'transactions');
-        await addDoc(transactionsRef, {
-          type: 'credit_purchase',
-          amount: amount,
-          quantity: quantity,
-          paymentId: razorpay_payment_id,
-          orderId: razorpay_order_id,
-          timestamp: serverTimestamp()
-        });
-      }
-
-      return res.status(200).json({ 
-        success: true,
-        message: 'Payment verified and credits added successfully' 
-      });
-    } catch (error) {
-      console.error('Firebase update error:', error);
-      // Check for permission-denied errors
-      const errorMessage = error.code === 'permission-denied' 
-        ? 'Permission denied: Please check security rules' 
-        : error.message;
-      
-      return res.status(500).json({ 
-        error: 'Database update failed', 
-        message: errorMessage
-      });
-    }
+    // Return success response without Firebase operations
+    return res.status(200).json({ 
+      success: true,
+      message: 'Payment verified successfully',
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id
+    });
   } catch (error) {
     console.error('Payment verification error:', error);
     return res.status(500).json({ 
