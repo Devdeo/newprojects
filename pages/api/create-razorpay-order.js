@@ -14,6 +14,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    // Check if Razorpay keys are available
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error('Razorpay keys missing');
+      return res.status(500).json({ error: 'Payment configuration error' });
+    }
+
     // Initialize Razorpay
     const razorpay = new Razorpay({
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -33,8 +39,11 @@ export default async function handler(req, res) {
       },
     };
 
+    console.log('Creating Razorpay order with options:', { ...options, key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID });
+
     // Create order
     const order = await razorpay.orders.create(options);
+    console.log('Order created successfully:', order.id);
 
     return res.status(200).json({
       id: order.id,
@@ -43,6 +52,9 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
-    return res.status(500).json({ error: 'Failed to create order' });
+    return res.status(500).json({ 
+      error: 'Failed to create order',
+      details: error.message
+    });
   }
 }

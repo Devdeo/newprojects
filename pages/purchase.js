@@ -118,7 +118,7 @@ const PurchasePage = () => {
       console.log("Order response:", order);
 
       if (order.error) {
-        alert(order.error);
+        alert(order.error || "Failed to create order");
         setPaymentLoading(false);
         return;
       }
@@ -133,7 +133,7 @@ const PurchasePage = () => {
         order_id: order.id,
         handler: async function(response) {
           try {
-            if (!response.razorpay_payment_id || !response.razorpay_signature) {
+            if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
               throw new Error('Invalid payment response');
             }
             
@@ -141,7 +141,7 @@ const PurchasePage = () => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                orderId: order.id,
+                orderId: response.razorpay_order_id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
                 userId: user.id,
