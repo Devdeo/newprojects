@@ -73,26 +73,26 @@ const PurchasePage = () => {
   const handleRazorpayPayment = async () => {
     try {
       setPaymentLoading(true);
-      
+
       // First, initialize Razorpay
       const initRazorpay = () => {
         return new Promise((resolve) => {
           const script = document.createElement('script');
           script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          
+
           script.onload = () => {
             resolve(true);
           };
           script.onerror = () => {
             resolve(false);
           };
-          
+
           document.body.appendChild(script);
         });
       };
-      
+
       const razorpayLoaded = await initRazorpay();
-      
+
       if (!razorpayLoaded) {
         alert('Razorpay SDK failed to load. Please try again later.');
         setPaymentLoading(false);
@@ -144,16 +144,15 @@ const PurchasePage = () => {
                 quantity: quantity,
               }),
             });
-            
+
             const result = await verifyResponse.json();
-            
-            if (result.success) {
-              // Redirect to dashboard on success
-              router.push('/dashboard?payment=success');
+
+            if (result.success && result.redirect) {
+              router.push(result.redirect);
             } else {
               alert('Payment verification failed. Please contact support.');
             }
-            
+
 
             const data = await verifyResponse.json();
 

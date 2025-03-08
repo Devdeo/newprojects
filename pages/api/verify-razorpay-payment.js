@@ -39,6 +39,12 @@ export default async function handler(req, res) {
     };
     
     await addCreditsToUser(userId, parseInt(quantity), transactionDetails);
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Payment verified and credits added successfully',
+      redirect: '/dashboard'
+    });
 
     return res.status(200).json({ success: true });
   } catch (error) {

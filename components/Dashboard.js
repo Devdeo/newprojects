@@ -166,7 +166,8 @@ const Dashboard = () => {
           const userData = docSnap.data();
           setUserInfo({
             name: userData.name || auth.currentUser.displayName || 'User',
-            email: userData.email || auth.currentUser.email || 'No email'
+            email: userData.email || auth.currentUser.email || 'No email',
+            lastWalletUpdate: userData.lastWalletUpdate ? new Date(userData.lastWalletUpdate.toDate()).toLocaleString() : 'Not updated'
           });
           setCreditBalance(userData.creditBalance || 0);
 
@@ -412,6 +413,9 @@ const Dashboard = () => {
               <div className={styles.statItem}>
                 <h3>Credit Balance</h3>
                 <p>{creditBalance} credits</p>
+                {userInfo.lastWalletUpdate && (
+                  <p className={styles.lastUpdate}>Last updated: {userInfo.lastWalletUpdate}</p>
+                )}
                 <button 
                   className={styles.addCreditButton}
                   onClick={() => router.push('/purchase?quantity=10')}
