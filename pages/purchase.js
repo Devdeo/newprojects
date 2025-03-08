@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -35,23 +34,23 @@ const PurchasePage = () => {
         router.push('/');
         return;
       }
-      
+
       setUser(currentUser);
-      
+
       try {
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
-        
+
         if (userSnap.exists()) {
           setUserData(userSnap.data());
         }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
-      
+
       setLoading(false);
     });
-    
+
     return () => unsubscribe();
   }, []);
 
@@ -59,7 +58,7 @@ const PurchasePage = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      
+
       script.onload = () => {
         resolve(true);
       };
@@ -125,53 +124,53 @@ const PurchasePage = () => {
         order_id: orderData.id,
         handler: async function (response) {
           try {
-            // Verify the payment signature locally
-            const generatedSignature = crypto
-              .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-              .update(`${response.razorpay_order_id}|${response.razorpay_payment_id}`)
-              .digest('hex');
-            
-            const isAuthentic = generatedSignature === response.razorpay_signature;
-            
-            if (!isAuthentic) {
-              console.error('Payment signature verification failed');
-              alert('Payment verification failed. Please contact support.');
-              setProcessing(false);
-              return;
+            // Send verification request to our API
+            const verifyResponse = await fetch('/api/verify-razorpay-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                userId: user.uid,
+                quantity: quantity
+              }),
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyData.success) {
+              throw new Error(verifyData.error || 'Payment verification failed');
             }
-            
-            // Update user data directly
-            try {
-              // Query the user document by UID
-              const q = query(collection(db, "users"), where("uid", "==", user.uid));
-              const docs = await getDocs(q);
-              
-              if (docs.docs.length === 1) {
-                // Update the main user document
-                const userRef = doc(db, "users", docs.docs[0].id);
-                await updateDoc(userRef, {
-                  creditBalance: increment(quantity)
-                });
-                
-                // Add transaction record to subcollection
-                const transactionsRef = collection(userRef, 'transactions');
-                await addDoc(transactionsRef, {
-                  type: 'credit_purchase',
-                  amount: quantity * PRICE_PER_CREDIT,
-                  quantity: quantity,
-                  paymentId: response.razorpay_payment_id,
-                  orderId: response.razorpay_order_id,
-                  timestamp: serverTimestamp()
-                });
-                
-                // Redirect to dashboard with success message
-                router.push('/dashboard?payment_success=true');
-              } else {
-                throw new Error('User document not found');
-              }
-            } catch (dbError) {
-              console.error('Database update failed:', dbError);
-              alert(`Database update failed: ${dbError.message}. Your payment was successful, please contact support.`);
+
+            // Query the user document by UID to get updated data
+            const q = query(collection(db, "users"), where("uid", "==", user.uid));
+            const docs = await getDocs(q);
+
+            if (docs.docs.length === 1) {
+              // Update the main user document
+              const userRef = doc(db, "users", docs.docs[0].id);
+              await updateDoc(userRef, {
+                creditBalance: increment(quantity)
+              });
+
+              // Add transaction record to subcollection
+              const transactionsRef = collection(userRef, 'transactions');
+              await addDoc(transactionsRef, {
+                type: 'credit_purchase',
+                amount: quantity * PRICE_PER_CREDIT,
+                quantity: quantity,
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                timestamp: serverTimestamp()
+              });
+
+              // Redirect to dashboard with success message
+              router.push('/dashboard?payment_success=true');
+            } else {
+              throw new Error('User document not found');
             }
           } catch (error) {
             console.error('Payment verification failed:', error);
@@ -229,7 +228,7 @@ const PurchasePage = () => {
       <main className={styles.main}>
         <div className={styles.purchaseContainer}>
           <h1 className={styles.title}>Purchase Credits</h1>
-          
+
           <div className={styles.creditInfo}>
             <p>Credits are used to pay for streaming time. Each credit allows for 1 hour of streaming.</p>
             <p>Current credit balance: <strong>{userData?.creditBalance || 0}</strong></p>
