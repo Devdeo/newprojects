@@ -1,3 +1,4 @@
+
 import crypto from 'crypto';
 import { doc, updateDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
@@ -23,17 +24,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
-    // Get the user document from Firestore and update
     try {
       // Update user document with new credit balance
       const userRef = doc(db, 'users', userId);
       await updateDoc(userRef, {
-        creditBalance: increment(quantity),
-        lastWalletUpdate: serverTimestamp()
+        credits: increment(quantity),  // Make sure the field name matches what you use elsewhere
+        lastUpdated: serverTimestamp()
       });
 
-      // Add transaction record - ensuring we add it to the proper collection path
-      // This follows the security rule: match /users/{uid}/transactions/{transaction}
+      // Add transaction record
       const transactionsRef = collection(db, 'users', userId, 'transactions');
       await addDoc(transactionsRef, {
         type: 'credit_purchase',
@@ -50,7 +49,7 @@ export default async function handler(req, res) {
       });
     } catch (error) {
       console.error('Firebase update error:', error);
-      // Check for permission-denied errors that might be related to security rules
+      // Check for permission-denied errors
       const errorMessage = error.code === 'permission-denied' 
         ? 'Permission denied: Please check security rules' 
         : error.message;
