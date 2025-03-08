@@ -3,8 +3,7 @@ import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth, db } from '../firebase/config';
 import { collection, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { toast } from 'react-hot-toast';
-import { ref, uploadBytesResumable, getDownloadURL, getStorage, deleteObject } from 'firebase/storage';
+
 import { toast } from 'react-hot-toast';
 
 const Dashboard = () => {
