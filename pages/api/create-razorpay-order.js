@@ -20,11 +20,17 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Payment configuration error' });
     }
 
-    // Initialize Razorpay
-    const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
+    // Initialize Razorpay with proper error handling
+    let razorpay;
+    try {
+      razorpay = new Razorpay({
+        key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+    } catch (initError) {
+      console.error('Failed to initialize Razorpay:', initError);
+      return res.status(500).json({ error: 'Payment service initialization failed' });
+    }
 
     // Create order with proper options
     const payment_capture = 1;
@@ -39,11 +45,24 @@ export default async function handler(req, res) {
       },
     };
 
-    console.log('Creating Razorpay order with options:', { ...options, key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID });
+    console.log('Creating Razorpay order with options:', { 
+      amount: options.amount,
+      currency: options.currency, 
+      receipt: options.receipt
+    });
 
-    // Create order
-    const order = await razorpay.orders.create(options);
-    console.log('Order created successfully:', order.id);
+    // Create order with proper error handling
+    let order;
+    try {
+      order = await razorpay.orders.create(options);
+      console.log('Order created successfully:', order.id);
+    } catch (orderError) {
+      console.error('Razorpay order creation failed:', orderError);
+      return res.status(500).json({ 
+        error: 'Failed to create payment order',
+        details: orderError.message
+      });
+    }
 
     return res.status(200).json({
       id: order.id,

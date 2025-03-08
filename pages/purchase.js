@@ -1,4 +1,3 @@
-
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { useEffect, useState } from "react";
@@ -48,7 +47,7 @@ const PurchasePage = () => {
         router.push('/');
         return;
       }
-      
+
       setUser({
         id: userId,
         email: localStorage.getItem('userEmail') || 'user@example.com',
@@ -56,7 +55,7 @@ const PurchasePage = () => {
       });
       setLoading(false);
     };
-    
+
     checkAuth();
 
     // Load Razorpay script
@@ -136,39 +135,49 @@ const PurchasePage = () => {
             if (!response.razorpay_payment_id || !response.razorpay_order_id || !response.razorpay_signature) {
               throw new Error('Invalid payment response');
             }
-            
-            const verifyResponse = await fetch("/api/verify-razorpay-payment", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                orderId: response.razorpay_order_id,
-                paymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
-                userId: user.id,
-                quantity,
-              }),
-            });
 
-            const result = await verifyResponse.json();
+            // Show processing state
+            setPaymentLoading(true);
 
-            if (verifyResponse.ok && result.success) {
-              console.log("Payment successful! Credits added:", result.credits);
-              
-              // Store the new balance in localStorage (in a real app, this would come from your database)
-              const currentBalance = parseInt(localStorage.getItem('creditBalance') || '0');
-              localStorage.setItem('creditBalance', (currentBalance + parseInt(quantity)).toString());
-              
-              router.push("/dashboard?payment_success=true");
-            } else {
-              console.error("Server verification failed:", result.error);
-              alert(
-                `Payment verification failed: ${result.error || "Unknown error"}. Please contact support.`,
-              );
+            try {
+              const verifyResponse = await fetch("/api/verify-razorpay-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  orderId: response.razorpay_order_id,
+                  paymentId: response.razorpay_payment_id,
+                  signature: response.razorpay_signature,
+                  userId: user.id,
+                  quantity,
+                }),
+              });
+
+              const result = await verifyResponse.json();
+
+              if (verifyResponse.ok && result.success) {
+                console.log("Payment successful! Credits added:", result.credits);
+
+                // Store the new balance in localStorage (in a real app, this would come from your database)
+                const currentBalance = parseInt(localStorage.getItem('creditBalance') || '0');
+                localStorage.setItem('creditBalance', (currentBalance + parseInt(quantity)).toString());
+
+                // Use window.location instead of router to ensure page refresh
+                window.location.href = "/dashboard?payment_success=true";
+              } else {
+                console.error("Server verification failed:", result.error);
+                alert(
+                  `Payment verification failed: ${result.error || "Unknown error"}. Please contact support.`,
+                );
+                setPaymentLoading(false);
+              }
+            } catch (error) {
+              console.error("Verification error:", error);
+              alert("Payment verification failed. Please contact support.");
               setPaymentLoading(false);
             }
           } catch (error) {
-            console.error("Verification error:", error);
-            alert("Payment verification failed. Please contact support.");
+            console.error("Payment handler error:", error);
+            alert("Payment process was interrupted. Please try again.");
             setPaymentLoading(false);
           }
         },
@@ -191,14 +200,14 @@ const PurchasePage = () => {
 
       try {
         const razorpay = new window.Razorpay(options);
-        
+
         // Handle errors from Razorpay
         razorpay.on('payment.failed', function(response) {
           console.error('Payment failed:', response.error);
           alert(`Payment failed: ${response.error.description}`);
           setPaymentLoading(false);
         });
-        
+
         razorpay.open();
       } catch (err) {
         console.error('Razorpay initialization error:', err);
