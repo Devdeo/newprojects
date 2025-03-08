@@ -6,7 +6,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { app } from "./config";
+import { app, auth } from "./config";
 
 const db = getFirestore(app);
 
@@ -16,7 +16,7 @@ export const addCreditsToUser = async (
   transactionDetails = null,
 ) => {
   try {
-    const userRef = doc(db, "users", userId);
+    const userRef = doc(db, "users", auth.currentUser.uid);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
@@ -37,7 +37,7 @@ export const addCreditsToUser = async (
 
     // If transaction details are provided, store the transaction in history
     if (transactionDetails) {
-      const transactionsRef = collection(db, "users", userId, "transactions");
+      const transactionsRef = collection(db, "users", auth.currentUser.uid, "transactions");
       await addDoc(transactionsRef, {
         ...transactionDetails,
         previousBalance: currentCredits,

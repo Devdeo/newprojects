@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 
     // Add credits to user's account
     const creditsToAdd = parseInt(quantity);
-    const newBalance = await addCreditsToUser(userId, creditsToAdd, {
+    const newBalance = await addCreditsToUser(auth.currentUser.uid, creditsToAdd, {
       type: 'credit',
       amount: creditsToAdd,
       description: `Purchased ${creditsToAdd} credits`,

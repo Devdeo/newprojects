@@ -20,11 +20,6 @@ export default async function handler(req, res) {
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('Razorpay API keys not found');
-      return res.status(500).json({ error: 'Razorpay configuration is missing' });
-    }
-
     // Create order with proper options
     const payment_capture = 1;
     const options = {
