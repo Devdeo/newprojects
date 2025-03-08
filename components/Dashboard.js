@@ -31,7 +31,7 @@ const Dashboard = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  const router = useRouter();
+  
   const [userInfo, setUserInfo] = useState({ name: '', email: '' });
   const [newTask, setNewTask] = useState({
     title: '',
