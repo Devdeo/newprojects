@@ -5,7 +5,8 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import { auth, db } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import crypto from 'crypto';
 import styles from '../styles/Page.module.css';
 import Script from 'next/script';
 
@@ -124,31 +125,59 @@ const PurchasePage = () => {
         order_id: orderData.id,
         handler: async function (response) {
           try {
-            // Verify payment on the server
-            const verifyResponse = await fetch('/api/verify-razorpay-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                ...response,
-                userId: user.uid,
-                amount: quantity * PRICE_PER_CREDIT,
-                quantity: quantity
-              }),
-            });
-
-            const verifyData = await verifyResponse.json();
+            // Verify the payment signature locally
+            const generatedSignature = crypto
+              .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+              .update(`${response.razorpay_order_id}|${response.razorpay_payment_id}`)
+              .digest('hex');
             
-            if (verifyData.error) {
-              throw new Error(verifyData.error);
+            const isAuthentic = generatedSignature === response.razorpay_signature;
+            
+            if (!isAuthentic) {
+              console.error('Payment signature verification failed');
+              alert('Payment verification failed. Please contact support.');
+              setProcessing(false);
+              return;
             }
-
-            // Redirect to dashboard with success message
-            router.push('/dashboard?payment_success=true');
+            
+            // Update user data directly
+            try {
+              // Query the user document by UID
+              const q = query(collection(db, "users"), where("uid", "==", user.uid));
+              const docs = await getDocs(q);
+              
+              if (docs.docs.length === 1) {
+                // Update the main user document
+                const userRef = doc(db, "users", docs.docs[0].id);
+                await updateDoc(userRef, {
+                  creditBalance: increment(quantity)
+                });
+                
+                // Add transaction record to subcollection
+                const transactionsRef = collection(userRef, 'transactions');
+                await addDoc(transactionsRef, {
+                  type: 'credit_purchase',
+                  amount: quantity * PRICE_PER_CREDIT,
+                  quantity: quantity,
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id,
+                  timestamp: serverTimestamp()
+                });
+                
+                // Redirect to dashboard with success message
+                router.push('/dashboard?payment_success=true');
+              } else {
+                throw new Error('User document not found');
+              }
+            } catch (dbError) {
+              console.error('Database update failed:', dbError);
+              alert(`Database update failed: ${dbError.message}. Your payment was successful, please contact support.`);
+            }
           } catch (error) {
             console.error('Payment verification failed:', error);
             alert('Payment verification failed. Please contact support.');
+          } finally {
+            setProcessing(false);
           }
         },
         prefill: {
