@@ -1,6 +1,6 @@
 
 import crypto from 'crypto';
-import { doc, updateDoc, increment, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, increment, collection, addDoc,where, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 
 export default async function handler(req, res) {
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
 
     try {
       // Update user document with new credit balance
-      const userRef = doc(db, 'users', userId);
+      const userRef = doc(db, 'users' ,where("uid", "==", userId"))
+      const docs = await getDocs(userRef);
       await updateDoc(userRef, {
         credits: increment(quantity),  // Make sure the field name matches what you use elsewhere
         lastUpdated: serverTimestamp()
