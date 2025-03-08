@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
 import { auth, db } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import styles from '../styles/Page.module.css';
 import Script from 'next/script';
 
@@ -54,6 +54,22 @@ const PurchasePage = () => {
     return () => unsubscribe();
   }, []);
 
+  const initializeRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      
+      script.onload = () => {
+        resolve(true);
+      };
+      script.onerror = () => {
+        resolve(false);
+      };
+
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePayment = async () => {
     if (!user) {
       alert('Please log in to make a purchase');
@@ -70,6 +86,14 @@ const PurchasePage = () => {
     setProcessing(true);
 
     try {
+      // Initialize Razorpay
+      const res = await initializeRazorpay();
+      if (!res) {
+        alert("Razorpay SDK Failed to load");
+        setProcessing(false);
+        return;
+      }
+
       // Create order on the server
       const orderResponse = await fetch('/api/create-razorpay-order', {
         method: 'POST',
