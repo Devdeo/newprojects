@@ -192,10 +192,12 @@ const Dashboard = () => {
     fetchUserData();
 
     // Check for payment success query parameter
-    if (router.query.payment === 'success') {
+    if (router.query.payment_success === 'true') {
       toast.success('Payment successful! Your credits have been added.');
-      // Remove the query parameter
-      router.replace('/dashboard', undefined, { shallow: true });
+      // Remove the query parameter after a short delay to ensure the toast is displayed
+      setTimeout(() => {
+        router.replace('/dashboard', undefined, { shallow: true });
+      }, 1500);
     }
   }, [router]);
 

@@ -132,6 +132,7 @@ const PurchasePage = () => {
             const result = await verifyResponse.json();
 
             if (result.success) {
+              console.log("Payment successful! Credits added:", result.newBalance);
               router.push("/dashboard?payment_success=true");
             } else {
               console.error("Server verification failed:", result.error);

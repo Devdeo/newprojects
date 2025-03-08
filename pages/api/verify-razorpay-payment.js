@@ -33,22 +33,23 @@ export default async function handler(req, res) {
       amount: parseInt(quantity),
       timestamp: walletUpdateTime,
       walletUpdateTime: walletUpdateTime,
-      type: 'purchase',
+      type: 'credit',
       description: `Purchased ${quantity} credits`,
-      paymentMethod: 'razorpay'
+      paymentMethod: 'razorpay',
+      balance: null, // Will be calculated in addCreditsToUser
+      orderId: orderId
     };
     
-    await addCreditsToUser(userId, parseInt(quantity), transactionDetails);
+    const newBalance = await addCreditsToUser(userId, parseInt(quantity), transactionDetails);
     
     return res.status(200).json({ 
       success: true, 
       message: 'Payment verified and credits added successfully',
-      redirect: '/dashboard'
+      newBalance: newBalance,
+      redirect: '/dashboard?payment_success=true'
     });
-
-    return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('Error verifying Razorpay payment:', error);
-    return res.status(500).json({ success: false, error: 'Failed to verify payment' });
+    console.error('Error verifying payment:', error);
+    return res.status(500).json({ success: false, error: 'Internal server error' });
   }
 }
