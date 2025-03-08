@@ -1,15 +1,6 @@
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDoc,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
-import { app, auth } from "./config";
-
-const db = getFirestore(app);
+import { db } from "./config";
+import { doc, updateDoc, getDoc, collection, addDoc } from "firebase/firestore";
 
 export const addCreditsToUser = async (
   userId,

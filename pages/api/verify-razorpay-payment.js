@@ -1,7 +1,8 @@
 
-import { addCreditsToUser } from "../../firebase/firestore";
 import crypto from "crypto";
-import {auth} from "../../firebase/config";
+import Razorpay from "razorpay";
+import { addCreditsToUser } from "../../firebase/firestore";
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -13,6 +14,12 @@ export default async function handler(req, res) {
     if (!orderId || !paymentId || !signature || !userId || !quantity) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
+
+    // Initialize Razorpay
+    const razorpay = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
 
     // Verify the payment signature
     const generatedSignature = crypto
