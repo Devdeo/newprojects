@@ -202,6 +202,39 @@ const Dashboard = () => {
   useEffect(() => {
     if (router.query.payment_success === 'true') {
       toast.success('Payment successful! Your credits have been added.');
+      // Refresh user data to get updated balance
+      const fetchUserData = async () => {
+        try {
+          const userRef = doc(db, 'users', auth.currentUser.uid);
+          const docSnap = await getDoc(userRef);
+          
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUserInfo({
+              name: userData.name || auth.currentUser.displayName || 'User',
+              email: userData.email || auth.currentUser.email || 'No email',
+              lastWalletUpdate: userData.lastWalletUpdate ? new Date(userData.lastWalletUpdate.toDate()).toLocaleString() : 'Not updated'
+            });
+            setCreditBalance(userData.creditBalance || 0);
+            
+            // Fetch transaction history
+            const transactionsRef = collection(db, 'users', auth.currentUser.uid, 'transactions');
+            const transactionsSnapshot = await getDocs(query(transactionsRef, orderBy('timestamp', 'desc')));
+            const transactionsData = transactionsSnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+              date: doc.data().timestamp?.toDate?.() || new Date()
+            }));
+            
+            setTransactions(transactionsData);
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+        }
+      };
+      
+      fetchUserData();
+      
       // Remove the query parameter after a short delay to ensure the toast is displayed
       setTimeout(() => {
         router.replace('/dashboard', undefined, { shallow: true });

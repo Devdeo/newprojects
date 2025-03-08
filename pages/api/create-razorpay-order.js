@@ -35,13 +35,13 @@ export default async function handler(req, res) {
     // Create order with proper options
     const payment_capture = 1;
     const options = {
-      amount: Math.round(amount), // Amount in smallest currency unit (paise)
+      amount: Math.round(amount * 100), // Amount in smallest currency unit (paise)
       currency: 'INR',
       receipt: `receipt_${shortid.generate()}`,
       payment_capture,
       notes: {
         userId: userId,
-        quantity: quantity,
+        quantity: quantity || 1,
       },
     };
 

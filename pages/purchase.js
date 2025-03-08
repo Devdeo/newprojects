@@ -1,88 +1,103 @@
+
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import styles from '../styles/Page.module.css';
+import Script from 'next/script';
 
 const PurchasePage = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [user, setUser] = useState(null);
   const [quantity, setQuantity] = useState(10);
+  const [processing, setProcessing] = useState(false);
+  const [userData, setUserData] = useState(null);
+  const PRICE_PER_CREDIT = 10; // ₹10 per credit
 
-  const MIN_CREDITS = 10; // Minimum number of credits to purchase
-  const CREDIT_PRICE = 10; // ₹10 per credit
+  // Get quantity from URL query if available
+  useEffect(() => {
+    if (router.query.quantity) {
+      const queryQuantity = parseInt(router.query.quantity);
+      if (!isNaN(queryQuantity) && queryQuantity >= 10) {
+        setQuantity(queryQuantity);
+      }
+    }
+  }, [router.query.quantity]);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (!user) {
-          router.push('/');
-          return;
-        }
-
-        // Check if email verification is required (doesn't apply to OAuth providers)
-        const isEmailProvider = user.providerData[0]?.providerId === 'password';
-        if (isEmailProvider && !user.emailVerified) {
-          router.push('/dashboard');
-          return;
-        }
-
-        setLoading(false);
-      });
-      return () => unsubscribe();
-    };
-    checkAuth();
-
-    // Load Razorpay script
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    return () => {
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        router.push('/');
+        return;
       }
-    };
+      
+      setUser(currentUser);
+      
+      try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          setUserData(userSnap.data());
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+      
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
   }, []);
 
-  const handleRazorpayPayment = async () => {
-    try {
-      setPaymentLoading(true);
+  const handlePayment = async () => {
+    if (!user) {
+      alert('Please log in to make a purchase');
+      router.push('/');
+      return;
+    }
 
+    if (quantity < 10) {
+      alert('Minimum purchase is 10 credits');
+      setQuantity(10);
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
       // Create order on the server
-      const response = await fetch('/api/create-razorpay-order', {
+      const orderResponse = await fetch('/api/create-razorpay-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: quantity * CREDIT_PRICE * 100, // Amount in smallest currency unit (paise)
-          userId: auth.currentUser?.uid || '',
-          quantity: quantity,
+          amount: quantity * PRICE_PER_CREDIT,
+          userId: user.uid,
+          quantity: quantity
         }),
       });
 
-      const order = await response.json();
-      console.log("Order response:", order);
+      const orderData = await orderResponse.json();
+      console.log('Order response:', orderData);
 
-      if (order.error) {
-        alert(order.error);
-        setPaymentLoading(false);
-        return;
+      if (orderData.error) {
+        throw new Error(orderData.error);
       }
 
       // Initialize Razorpay payment
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: order.currency,
-        name: 'Video Loop Streaming',
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'StreamScript',
         description: `Purchase ${quantity} credits`,
-        order_id: order.id,
+        order_id: orderData.id,
         handler: async function (response) {
           try {
             // Verify payment on the server
@@ -92,136 +107,142 @@ const PurchasePage = () => {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                orderId: order.id,
-                paymentId: response.razorpay_payment_id,
-                signature: response.razorpay_signature,
-                userId: auth.currentUser?.uid || '',
-                quantity: quantity,
+                ...response,
+                userId: user.uid,
+                amount: quantity * PRICE_PER_CREDIT,
+                quantity: quantity
               }),
             });
 
-            const result = await verifyResponse.json();
-
-            if (result.success) {
-              // Redirect to dashboard on success
-              router.push('/dashboard?payment_success=true');
-            } else {
-              alert('Payment verification failed. Please contact support.');
-              setPaymentLoading(false);
+            const verifyData = await verifyResponse.json();
+            
+            if (verifyData.error) {
+              throw new Error(verifyData.error);
             }
+
+            // Redirect to dashboard with success message
+            router.push('/dashboard?payment_success=true');
           } catch (error) {
-            console.error('Verification error:', error);
+            console.error('Payment verification failed:', error);
             alert('Payment verification failed. Please contact support.');
-            setPaymentLoading(false);
           }
         },
         prefill: {
-          email: auth.currentUser?.email || '',
+          name: userData?.name || user.displayName || '',
+          email: user.email || '',
         },
         theme: {
           color: '#3399cc',
         },
-        modal: {
-          ondismiss: function() {
-            setPaymentLoading(false);
-          }
-        }
       };
 
+      // Initialize and open Razorpay
       const razorpay = new window.Razorpay(options);
       razorpay.open();
 
+      // Handle payment failure
+      razorpay.on('payment.failed', function (response) {
+        alert(`Payment failed: ${response.error.description}`);
+        setProcessing(false);
+      });
+
     } catch (error) {
-      console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
-      setPaymentLoading(false);
+      console.error('Error creating order:', error);
+      alert(`Failed to process payment: ${error.message}`);
+      setProcessing(false);
     }
   };
 
-  const handleSubmitPayment = async (e) => {
-    e.preventDefault();
+  const totalAmount = quantity * PRICE_PER_CREDIT;
 
-    // Check minimum purchase amount
-    if (quantity < MIN_CREDITS) {
-      alert(`Minimum purchase is ₹${MIN_CREDITS * CREDIT_PRICE} (${MIN_CREDITS} credits)`);
-      return;
-    }
-
-    // Create Razorpay payment
-    await handleRazorpayPayment();
-  };
-
-  const increaseQuantity = () => {
-    setQuantity(prev => prev + 1);
-  };
-
-  const decreaseQuantity = () => {
-    setQuantity(prev => prev > MIN_CREDITS ? prev - 1 : MIN_CREDITS);
-  };
+  if (loading) {
+    return <div className={styles.loadingContainer}>Loading...</div>;
+  }
 
   return (
-    <div>
+    <div className={styles.container}>
       <Head>
-        <title>Purchase Credits - Video Loop Streaming</title>
-        <meta name="description" content="Purchase credits" />
+        <title>Purchase Credits - StreamScript</title>
+        <meta name="description" content="Purchase credits for your streaming needs" />
       </Head>
-      <Navbar />
-      <main className={styles.container}>
-        <div className={styles.main}>
-          <div className={styles.purchaseContainer}>
-            <h1 className={styles.title}>Purchase Credits</h1>
-            <p className={styles.description}>
-              Credits let you process videos on our platform. Each credit costs ₹{CREDIT_PRICE}.
-            </p>
 
-            <div className={styles.purchaseForm}>
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="lazyOnload"
+      />
+
+      <Navbar />
+
+      <main className={styles.main}>
+        <div className={styles.purchaseContainer}>
+          <h1 className={styles.title}>Purchase Credits</h1>
+          
+          <div className={styles.creditInfo}>
+            <p>Credits are used to pay for streaming time. Each credit allows for 1 hour of streaming.</p>
+            <p>Current credit balance: <strong>{userData?.creditBalance || 0}</strong></p>
+          </div>
+
+          <div className={styles.purchaseCard}>
+            <div className={styles.quantitySelector}>
+              <h3>Select Quantity</h3>
               <div className={styles.quantityControls}>
                 <button 
-                  className={styles.quantityButton} 
-                  onClick={decreaseQuantity}
-                  disabled={quantity <= MIN_CREDITS}
-                >-</button>
-                <div className={styles.quantityDisplay}>
-                  <strong>{quantity}</strong> Credits
-                  <p className={styles.priceDisplay}>₹{quantity * CREDIT_PRICE}</p>
-                </div>
-                <button 
-                  className={styles.quantityButton} 
-                  onClick={increaseQuantity}
-                >+</button>
-              </div>
-
-              <div className={styles.paymentOptions}>
-                <h3>Secure Payment with Razorpay</h3>
-                <p className={styles.paymentInfo}>
-                  Click the button below to complete your transaction securely through Razorpay.
-                </p>
-              </div>
-
-              {!loading && (
-                <button 
-                  onClick={handleSubmitPayment} 
-                  className={styles.payButton}
-                  disabled={paymentLoading}
+                  onClick={() => setQuantity(Math.max(10, quantity - 5))}
+                  disabled={quantity <= 10}
+                  className={styles.quantityButton}
                 >
-                  {paymentLoading ? (
-                    <>
-                      <span className={styles.loadingSpinner}></span>
-                      Processing...
-                    </>
-                  ) : (
-                    'Pay Now'
-                  )}
+                  -
                 </button>
-              )}
-
-              {loading && (
-                <div className={styles.loadingContainer}>
-                  <span className={styles.loadingSpinner}></span>
-                  <p>Loading payment options...</p>
-                </div>
-              )}
+                <input 
+                  type="number" 
+                  min="10"
+                  value={quantity}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value) && value >= 10) {
+                      setQuantity(value);
+                    } else if (!isNaN(value) && value < 10) {
+                      setQuantity(10);
+                    }
+                  }}
+                  className={styles.quantityInput}
+                />
+                <button 
+                  onClick={() => setQuantity(quantity + 5)}
+                  className={styles.quantityButton}
+                >
+                  +
+                </button>
+              </div>
+              <p className={styles.minimumNotice}>Minimum purchase: 10 credits</p>
             </div>
+
+            <div className={styles.priceSummary}>
+              <div className={styles.priceRow}>
+                <span>Price per credit:</span>
+                <span>₹{PRICE_PER_CREDIT.toFixed(2)}</span>
+              </div>
+              <div className={styles.priceRow}>
+                <span>Quantity:</span>
+                <span>{quantity} credits</span>
+              </div>
+              <div className={`${styles.priceRow} ${styles.total}`}>
+                <span>Total Amount:</span>
+                <span>₹{totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <button 
+              className={styles.paymentButton} 
+              onClick={handlePayment}
+              disabled={processing}
+            >
+              {processing ? 'Processing...' : `Pay ₹${totalAmount.toFixed(2)}`}
+            </button>
+          </div>
+
+          <div className={styles.securityNote}>
+            <p>All payments are secure and encrypted. We use Razorpay for payment processing.</p>
           </div>
         </div>
       </main>
