@@ -149,15 +149,6 @@ const PurchasePage = () => {
             
             if (result.success) {
               // Redirect to dashboard on success
-              router.push('/dashboard?payment=success');
-            } else {
-              alert('Payment verification failed. Please contact support.');
-            }
-            
-
-            const data = await verifyResponse.json();
-
-            if (data.success) {
               router.push('/dashboard?payment_success=true');
             } else {
               alert('Payment verification failed. Please contact support.');

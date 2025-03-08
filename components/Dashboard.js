@@ -3,6 +3,7 @@ import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth, db } from '../firebase/config';
 import { collection, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
+import { toast } from 'react-hot-toast';
 import { ref, uploadBytesResumable, getDownloadURL, getStorage, deleteObject } from 'firebase/storage';
 import { toast } from 'react-hot-toast';
 
@@ -179,12 +180,12 @@ const Dashboard = () => {
 
           // Fetch transaction history
           const transactionsRef = collection(db, 'users', auth.currentUser.uid, 'transactions');
-          const transactionsSnapshot = await getDocs(transactionsRef);
+          const transactionsSnapshot = await getDocs(query(transactionsRef, orderBy('timestamp', 'desc')));
           const transactionsData = transactionsSnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data(),
             date: doc.data().timestamp?.toDate?.() || new Date()
-          })).sort((a, b) => b.date - a.date);
+          }));
 
           setTransactions(transactionsData);
         }
@@ -196,8 +197,10 @@ const Dashboard = () => {
     };
 
     fetchUserData();
-
-    // Check for payment success query parameter
+  }, []);
+  
+  // Handle payment success notification in a separate effect
+  useEffect(() => {
     if (router.query.payment_success === 'true') {
       toast.success('Payment successful! Your credits have been added.');
       // Remove the query parameter after a short delay to ensure the toast is displayed
@@ -205,7 +208,7 @@ const Dashboard = () => {
         router.replace('/dashboard', undefined, { shallow: true });
       }, 1500);
     }
-  }, [router]);
+  }, [router.query.payment_success, router]);
 
 
   const handleCreateTask = async (e) => {
