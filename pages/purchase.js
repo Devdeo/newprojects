@@ -147,17 +147,12 @@ const PurchasePage = () => {
 
             const result = await verifyResponse.json();
 
-            if (result.success && result.redirect) {
-              router.push(result.redirect);
-            } else {
-              alert('Payment verification failed. Please contact support.');
-            }
-
-
-            const data = await verifyResponse.json();
-
-            if (data.success) {
-              router.push('/dashboard?payment_success=true');
+            if (result.success) {
+              if (result.redirect) {
+                router.push(result.redirect);
+              } else {
+                router.push('/dashboard?payment_success=true');
+              }
             } else {
               alert('Payment verification failed. Please contact support.');
               setPaymentLoading(false);
