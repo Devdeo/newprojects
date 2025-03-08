@@ -420,7 +420,7 @@ const Dashboard = () => {
                 )}
                 <button 
                   className={styles.addCreditButton}
-                  onClick={() => router.push('/purchase?quantity=10')}
+                  onClick={() => router.push('/purchase')}
                 >
                   Add Credits
                 </button>
