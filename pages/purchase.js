@@ -111,8 +111,12 @@ const PurchasePage = () => {
         name: "Video Loop Streaming",
         description: `Purchase ${quantity} credits`,
         order_id: order.id,
-        handler: async (response) => {
+        handler: async function(response) {
           try {
+            if (!response.razorpay_payment_id || !response.razorpay_signature) {
+              throw new Error('Invalid payment response');
+            }
+            
             const verifyResponse = await fetch("/api/verify-razorpay-payment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -125,13 +129,9 @@ const PurchasePage = () => {
               }),
             });
 
-            if (!verifyResponse.ok) {
-              throw new Error(`Server responded with ${verifyResponse.status}`);
-            }
-
             const result = await verifyResponse.json();
 
-            if (result.success) {
+            if (verifyResponse.ok && result.success) {
               console.log("Payment successful! Credits added:", result.newBalance);
               router.push("/dashboard?payment_success=true");
             } else {
@@ -154,12 +154,32 @@ const PurchasePage = () => {
         image: "/favicon.svg",
         theme: { color: "#ff0000" },
         modal: {
-          ondismiss: () => setPaymentLoading(false),
+          ondismiss: function() {
+            setPaymentLoading(false);
+          },
         },
+        notes: {
+          userId: auth.currentUser?.uid || "",
+          quantity: quantity
+        }
       };
 
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      try {
+        const razorpay = new window.Razorpay(options);
+        
+        // Handle errors from Razorpay
+        razorpay.on('payment.failed', function(response) {
+          console.error('Payment failed:', response.error);
+          alert(`Payment failed: ${response.error.description}`);
+          setPaymentLoading(false);
+        });
+        
+        razorpay.open();
+      } catch (err) {
+        console.error('Razorpay initialization error:', err);
+        alert('Could not initialize payment gateway. Please try again later.');
+        setPaymentLoading(false);
+      }
     } catch (error) {
       console.error("Payment error:", error);
       alert("Payment failed. Please try again.");
