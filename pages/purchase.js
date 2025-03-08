@@ -1,45 +1,22 @@
-import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import Navbar from '../components/Navbar';
 import { auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
-import { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
 import styles from '../styles/Page.module.css';
 
 const PurchasePage = () => {
   const router = useRouter();
-  const { quantity: initialQuantity } = router.query;
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [quantity, setQuantity] = useState(10);
 
-  const [errorMessage, setErrorMessage] = useState('');
-  const MIN_PURCHASE_AMOUNT = 100; // ₹100 minimum purchase
+  const MIN_CREDITS = 10; // Minimum number of credits to purchase
   const CREDIT_PRICE = 10; // ₹10 per credit
-  const MIN_CREDITS = Math.ceil(MIN_PURCHASE_AMOUNT / CREDIT_PRICE); // Minimum 10 credits
 
   useEffect(() => {
-    // Set initial quantity from URL parameter, ensuring it meets minimum
-    if (initialQuantity) {
-      const parsedQuantity = parseInt(initialQuantity);
-      setQuantity(parsedQuantity < MIN_CREDITS ? MIN_CREDITS : parsedQuantity);
-    } else {
-      setQuantity(MIN_CREDITS);
-    }
-  }, [initialQuantity]);
-
-  useEffect(() => {
-    // Validate minimum purchase amount when quantity changes
-    if (quantity < MIN_CREDITS) {
-      setErrorMessage(`Minimum purchase is ₹${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
-    } else {
-      setErrorMessage('');
-    }
-  }, [quantity]);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true);
+    const checkAuth = () => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (!user) {
           router.push('/');
@@ -66,38 +43,15 @@ const PurchasePage = () => {
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
   const handleRazorpayPayment = async () => {
     try {
       setPaymentLoading(true);
-      
-      // First, initialize Razorpay
-      const initRazorpay = () => {
-        return new Promise((resolve) => {
-          const script = document.createElement('script');
-          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          
-          script.onload = () => {
-            resolve(true);
-          };
-          script.onerror = () => {
-            resolve(false);
-          };
-          
-          document.body.appendChild(script);
-        });
-      };
-      
-      const razorpayLoaded = await initRazorpay();
-      
-      if (!razorpayLoaded) {
-        alert('Razorpay SDK failed to load. Please try again later.');
-        setPaymentLoading(false);
-        return;
-      }
 
       // Create order on the server
       const response = await fetch('/api/create-razorpay-order', {
@@ -113,6 +67,7 @@ const PurchasePage = () => {
       });
 
       const order = await response.json();
+      console.log("Order response:", order);
 
       if (order.error) {
         alert(order.error);
@@ -144,9 +99,9 @@ const PurchasePage = () => {
                 quantity: quantity,
               }),
             });
-            
+
             const result = await verifyResponse.json();
-            
+
             if (result.success) {
               // Redirect to dashboard on success
               router.push('/dashboard?payment_success=true');
@@ -162,11 +117,9 @@ const PurchasePage = () => {
         },
         prefill: {
           email: auth.currentUser?.email || '',
-          name: auth.currentUser?.displayName || '',
         },
-        image: '/favicon.svg',
         theme: {
-          color: '#ff0000',
+          color: '#3399cc',
         },
         modal: {
           ondismiss: function() {
@@ -190,7 +143,7 @@ const PurchasePage = () => {
 
     // Check minimum purchase amount
     if (quantity < MIN_CREDITS) {
-      alert(`Minimum purchase is $${MIN_PURCHASE_AMOUNT} (${MIN_CREDITS} credits)`);
+      alert(`Minimum purchase is ₹${MIN_CREDITS * CREDIT_PRICE} (${MIN_CREDITS} credits)`);
       return;
     }
 
@@ -207,56 +160,35 @@ const PurchasePage = () => {
   };
 
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
-        <title>Purchase Credits - My Site</title>
+        <title>Purchase Credits - Video Loop Streaming</title>
         <meta name="description" content="Purchase credits" />
       </Head>
       <Navbar />
-      <main className={styles.main}>
-        <div className={styles.purchaseWrapper}>
-          <div className={styles.purchaseCard}>
-            <div className={styles.purchaseHeader}>
-              <h1>Purchase Credits</h1>
-              <p className={styles.subtitle}>Secure payment options available</p>
-            </div>
-            <div className={styles.purchaseDetails}>
-              <div className={styles.detailRow}>
-                <span>Quantity</span>
-                <div className={styles.quantityControl}>
-                  <button 
-                    type="button" 
-                    onClick={decreaseQuantity}
-                    className={styles.quantityButton}
-                    disabled={quantity <= MIN_CREDITS}
-                  >
-                    -
-                  </button>
-                  <span className={styles.quantity}>{quantity} credit(s)</span>
-                  <button 
-                    type="button" 
-                    onClick={increaseQuantity}
-                    className={styles.quantityButton}
-                  >
-                    +
-                  </button>
+      <main className={styles.container}>
+        <div className={styles.main}>
+          <div className={styles.purchaseContainer}>
+            <h1 className={styles.title}>Purchase Credits</h1>
+            <p className={styles.description}>
+              Credits let you process videos on our platform. Each credit costs ₹{CREDIT_PRICE}.
+            </p>
+
+            <div className={styles.purchaseForm}>
+              <div className={styles.quantityControls}>
+                <button 
+                  className={styles.quantityButton} 
+                  onClick={decreaseQuantity}
+                  disabled={quantity <= MIN_CREDITS}
+                >-</button>
+                <div className={styles.quantityDisplay}>
+                  <strong>{quantity}</strong> Credits
+                  <p className={styles.priceDisplay}>₹{quantity * CREDIT_PRICE}</p>
                 </div>
-              </div>
-              <div className={styles.detailRow}>
-                <span>Price per credit</span>
-                <span>₹{CREDIT_PRICE.toFixed(2)}</span>
-              </div>
-              <div className={styles.detailRow}>
-                <span>Total amount</span>
-                <span className={styles.total}>₹{(quantity * CREDIT_PRICE).toFixed(2)}</span>
-              </div>
-              {errorMessage && (
-                <div className={styles.errorMessage}>
-                  {errorMessage}
-                </div>
-              )}
-              <div className={styles.minCreditNotice}>
-                Minimum purchase: {MIN_CREDITS} credits (₹{MIN_PURCHASE_AMOUNT.toFixed(2)})
+                <button 
+                  className={styles.quantityButton} 
+                  onClick={increaseQuantity}
+                >+</button>
               </div>
 
               <div className={styles.paymentOptions}>

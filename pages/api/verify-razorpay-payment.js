@@ -1,5 +1,3 @@
-
-import Razorpay from "razorpay";
 import { db } from "../../firebase/config";
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 const crypto = require("crypto");
@@ -28,59 +26,44 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Invalid signature" });
     }
 
-    // Update user credit balance in Firebase
+    // Update user's credits
     try {
-      // Get current user document
-      const userRef = doc(db, "users", userId);
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists()) {
-        return res.status(404).json({ error: "User not found" });
+      // Get current user credit info
+      const userDocRef = doc(db, "users", userId);
+      const userDoc = await getDoc(userDocRef);
+
+      let currentCredits = 0;
+      if (userDoc.exists()) {
+        currentCredits = userDoc.data().credits || 0;
       }
-      
-      const userData = userSnap.data();
-      const currentBalance = userData.creditBalance || 0;
-      const newBalance = currentBalance + parseInt(quantity);
-      
-      // Update user's credit balance
-      await updateDoc(userRef, {
-        creditBalance: newBalance,
-        lastWalletUpdate: serverTimestamp()
+
+      // Update credits
+      await updateDoc(userDocRef, {
+        credits: currentCredits + parseInt(quantity),
+        lastUpdated: serverTimestamp()
       });
-      
+
       // Add transaction record
-      const transactionsRef = collection(db, "users", userId, "transactions");
-      await addDoc(transactionsRef, {
-        type: "credit",
-        amount: parseInt(quantity),
-        description: `Added ${quantity} credits via Razorpay`,
-        paymentId: paymentId,
+      const transactionRef = collection(db, `users/${userId}/transactions`);
+      await addDoc(transactionRef, {
         orderId: orderId,
-        timestamp: serverTimestamp(),
-        balance: newBalance
-      });
-      
-      console.log(`Updated credit balance for user ${userId}: +${quantity} credits`);
-      
-      // Return success
-      return res.status(200).json({
-        success: true,
+        paymentId: paymentId,
+        amount: quantity * 10, // Assuming each credit is ₹10
         credits: parseInt(quantity),
-        newBalance: newBalance,
-        message: "Payment verified and credits added successfully"
+        timestamp: serverTimestamp(),
+        status: "completed"
       });
+
+      return res.status(200).json({ success: true, message: "Payment verified and credits added" });
     } catch (dbError) {
       console.error("Database error:", dbError);
-      return res.status(500).json({
-        error: "Failed to update user credits",
-        details: dbError.message
-      });
+      return res.status(500).json({ error: "Failed to update user credits", details: dbError.message });
     }
   } catch (error) {
-    console.error("Error verifying payment:", error);
-    return res.status(500).json({
-      error: "Failed to verify payment",
-      details: error.message
+    console.error("Payment verification error:", error);
+    return res.status(500).json({ 
+      error: "Payment verification failed", 
+      details: error.message 
     });
   }
 }
