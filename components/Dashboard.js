@@ -681,6 +681,15 @@ const Dashboard = () => {
                           ? `Each loop costs 1 credit. Maximum: ${Math.floor(creditBalance)} loops.` 
                           : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
                       </small>
+                      <div className={styles.addCreditsContainer}>
+                        <button 
+                          type="button" 
+                          className={styles.addCreditsButton}
+                          onClick={() => router.push('/purchase')}
+                        >
+                          Add Credits
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

@@ -779,10 +779,9 @@
 }
 
 .creditInfo {
-  display: block;
-  color: #64748b;
-  font-size: 12px;
-  margin-top: 5px;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
 }
 
 .uploadRestrictions {
@@ -886,4 +885,25 @@
   font-size: 0.8rem;
   color: #94a3b8;
   margin-top: 5px;
+}
+
+.addCreditsContainer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.addCreditsButton {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.addCreditsButton:hover {
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
 }

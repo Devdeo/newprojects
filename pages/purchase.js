@@ -161,8 +161,8 @@ const PurchasePage = () => {
                 const currentBalance = parseInt(localStorage.getItem('creditBalance') || '0');
                 localStorage.setItem('creditBalance', (currentBalance + parseInt(quantity)).toString());
 
-                // Use window.location instead of router to ensure page refresh
-                window.location.href = "/dashboard?payment_success=true";
+                // Use window.location to ensure page refreshes with the updated balance
+                window.location.href = "/dashboard?payment_success=true&timestamp=" + new Date().getTime();
               } else {
                 console.error("Server verification failed:", result.error);
                 alert(
