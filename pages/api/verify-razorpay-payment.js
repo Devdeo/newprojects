@@ -1,9 +1,10 @@
 
-import { db } from "../../firebase/config";
+import { auth,db } from "../../firebase/config";
 import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
