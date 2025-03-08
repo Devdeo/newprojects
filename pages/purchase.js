@@ -3,9 +3,6 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Navbar from '../components/Navbar';
-import { auth, db } from '../firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 import styles from '../styles/Page.module.css';
 import Script from 'next/script';
 
@@ -29,29 +26,27 @@ const PurchasePage = () => {
   }, [router.query.quantity]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        router.push('/');
-        return;
-      }
-      
-      setUser(currentUser);
-      
+    const checkAuth = async () => {
       try {
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
+        const response = await fetch('/api/check-auth');
+        const data = await response.json();
         
-        if (userSnap.exists()) {
-          setUserData(userSnap.data());
+        if (!data.authenticated) {
+          router.push('/');
+          return;
         }
+        
+        setUser(data.user);
+        setUserData(data.userData);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error checking authentication:', error);
+        router.push('/');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
-    });
+    };
     
-    return () => unsubscribe();
+    checkAuth();
   }, []);
 
   const handlePayment = async () => {

@@ -1,6 +1,4 @@
 
-import { auth,db } from "../../firebase/config";
-import { doc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
@@ -26,41 +24,40 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Payment verification failed' });
     }
 
-    // Get the user document from Firestore
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
+    // Update user's credit balance via API
+    try {
+      const updateUserResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/users/${userId}/update-credits`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          credits: parseInt(quantity),
+          amount: parseInt(amount) / 100, // Convert paise to INR
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+        }),
+      });
 
-    if (!userDoc.exists()) {
-      console.log('User not found:', userId);
-      return res.status(404).json({ error: 'User not found' });
+      const userData = await updateUserResponse.json();
+      
+      if (userData.error) {
+        throw new Error(userData.error);
+      }
+
+      return res.status(200).json({ 
+        success: true,
+        message: 'Payment verified and credits added successfully',
+        newBalance: userData.newBalance
+      });
+    } catch (updateError) {
+      console.error('Error updating user credits:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to update user credits', 
+        message: updateError.message 
+      });
     }
-
-    const userData = userDoc.data();
-    const currentBalance = userData.creditBalance || 0;
-    const newBalance = currentBalance + parseInt(quantity);
-
-    // Update user's credit balance
-    await updateDoc(userRef, {
-      creditBalance: newBalance,
-      lastWalletUpdate: serverTimestamp()
-    });
-
-    // Add transaction record
-    const transactionRef = collection(db, 'users', userId, 'transactions');
-    await addDoc(transactionRef, {
-      type: 'credit',
-      amount: parseInt(amount) / 100, // Convert paise to INR
-      credits: parseInt(quantity),
-      paymentId: razorpay_payment_id,
-      orderId: razorpay_order_id,
-      timestamp: serverTimestamp()
-    });
-
-    return res.status(200).json({ 
-      success: true,
-      message: 'Payment verified and credits added successfully',
-      newBalance
-    });
   } catch (error) {
     console.error('Error verifying payment:', error);
     return res.status(500).json({ 
