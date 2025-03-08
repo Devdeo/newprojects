@@ -145,25 +145,23 @@ const PurchasePage = () => {
               }),
             });
 
-            try {
-              const result = await verifyResponse.json();
+            if (!verifyResponse.ok) {
+              throw new Error(`Server responded with ${verifyResponse.status}`);
+            }
 
-              if (result.success) {
-                if (result.redirect) {
-                  router.push(result.redirect);
-                } else {
-                  router.push('/dashboard?payment_success=true');
-                }
-              } else {
-                alert('Payment verification failed. Please contact support.');
-                setPaymentLoading(false);
-              }
-            } catch (error) {
-              console.error('JSON parsing error:', error);
+            const result = await verifyResponse.json();
+
+            if (result.success) {
+              // Payment was successful, redirect to dashboard
+              router.push('/dashboard?payment_success=true');
+            } else {
+              // Server returned success: false
+              console.error('Server verification failed:', result.error);
               alert('Payment verification failed. Please contact support.');
               setPaymentLoading(false);
             }
           } catch (error) {
+            // Handle any exceptions during verification process
             console.error('Verification error:', error);
             alert('Payment verification failed. Please contact support.');
             setPaymentLoading(false);
