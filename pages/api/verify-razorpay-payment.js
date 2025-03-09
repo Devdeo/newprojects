@@ -75,3 +75,56 @@ export default async function handler(req, res) {
     });
   }
 }
+import crypto from 'crypto';
+import { adminDb, admin } from '../../firebase/admin';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature, userId, quantity } = req.body;
+
+  try {
+    // Verify the Razorpay signature
+    const generatedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + '|' + razorpay_payment_id)
+      .digest('hex');
+
+    if (generatedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, error: 'Invalid payment signature' });
+    }
+
+    // Get the user document
+    const userQuery = await adminDb.collection('users').where('uid', '==', userId).limit(1).get();
+    
+    if (userQuery.empty) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const userDoc = userQuery.docs[0];
+    const userRef = adminDb.collection('users').doc(userDoc.id);
+
+    // Update the user's credit balance
+    await userRef.update({
+      creditBalance: admin.firestore.FieldValue.increment(parseInt(quantity))
+    });
+
+    // Add a transaction record
+    const transactionsRef = userRef.collection('transactions');
+    await transactionsRef.add({
+      type: 'credit_purchase',
+      amount: parseInt(quantity) * 10, // Assuming PRICE_PER_CREDIT = 10
+      quantity: parseInt(quantity),
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    return res.status(500).json({ success: false, error: 'Payment verification failed' });
+  }
+}

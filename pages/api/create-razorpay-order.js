@@ -77,3 +77,57 @@ export default async function handler(req, res) {
     });
   }
 }
+import Razorpay from 'razorpay';
+import { adminDb } from '../../firebase/admin';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { amount, userId, quantity } = req.body;
+
+  try {
+    // Initialize Razorpay
+    const razorpay = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    // Create order
+    const options = {
+      amount: amount * 100, // Convert to smallest currency unit (paise)
+      currency: 'INR',
+      receipt: `receipt_order_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    // Store order in Firestore for reference (optional)
+    const userQuery = await adminDb.collection('users').where('uid', '==', userId).limit(1).get();
+    
+    if (!userQuery.empty) {
+      const userDoc = userQuery.docs[0];
+      const userRef = adminDb.collection('users').doc(userDoc.id);
+      const ordersRef = userRef.collection('orders');
+      
+      await ordersRef.add({
+        orderId: order.id,
+        amount: amount,
+        currency: 'INR',
+        quantity: quantity,
+        status: 'created',
+        createdAt: new Date()
+      });
+    }
+
+    return res.status(200).json({
+      id: order.id,
+      amount: order.amount,
+      currency: order.currency,
+    });
+  } catch (error) {
+    console.error('Error creating Razorpay order:', error);
+    return res.status(500).json({ error: 'Failed to create order' });
+  }
+}
