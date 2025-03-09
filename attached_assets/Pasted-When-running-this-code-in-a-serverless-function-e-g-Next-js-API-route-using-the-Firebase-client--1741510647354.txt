@@ -1,0 +1,65 @@
+When running this code in a serverless function (e.g. Next.js API route), using the Firebase client SDK means that Firestore security rules still apply. In your case, those rules require an authenticated user with a matching UID. However, serverless functions don’t automatically include a Firebase Authentication context. As a result, Firestore sees your request as coming from an unauthenticated source, leading to "insufficient permission" errors.
+
+### Recommended Solution: Use the Firebase Admin SDK
+
+The Firebase Admin SDK is designed for server-side environments and bypasses Firestore security rules entirely. This way, you don’t have to worry about client authentication in your serverless function.
+
+#### Steps to Switch to the Admin SDK
+
+1. **Install the Admin SDK:**  
+   Run the following command in your project directory:  
+   ```bash
+   npm install firebase-admin
+   ```
+
+2. **Initialize the Admin SDK in your serverless function:**  
+   Replace your current Firestore initialization with something like this:
+   ```javascript
+   import admin from 'firebase-admin';
+
+   // Check if the admin app has already been initialized (important in serverless environments)
+   if (!admin.apps.length) {
+     admin.initializeApp({
+       credential: admin.credential.cert({
+         projectId: process.env.FIREBASE_PROJECT_ID,
+         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+         // Ensure your private key is correctly formatted (replace escaped newlines if necessary)
+         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+       }),
+       databaseURL: process.env.FIREBASE_DATABASE_URL,
+     });
+   }
+
+   const db = admin.firestore();
+   ```
+
+3. **Update your Firestore calls:**  
+   Replace the Firebase client SDK methods (like `updateDoc`, `addDoc`, etc.) with their Admin SDK equivalents. For example:
+   ```javascript
+   // For updating the user document:
+   const userRef = db.collection('users').doc(userDocs.docs[0].id);
+   await userRef.update({
+     creditBalance: admin.firestore.FieldValue.increment(parseInt(quantity))
+   });
+
+   // For adding a transaction record:
+   const transactionsRef = userRef.collection('transactions');
+   await transactionsRef.add({
+     type: 'credit_purchase',
+     amount: parseInt(quantity) * 10, // Assuming PRICE_PER_CREDIT = 10
+     quantity: parseInt(quantity),
+     paymentId: razorpay_payment_id,
+     orderId: razorpay_order_id,
+     timestamp: admin.firestore.FieldValue.serverTimestamp()
+   });
+   ```
+
+### Why This Works
+
+- **Bypassing Security Rules:**  
+  The Admin SDK uses service account credentials, which have full privileges on your Firestore database. This means the operations aren’t subject to the client-side security rules (which require a valid `request.auth`).
+
+- **Server-Side Environment:**  
+  Since your code runs in a serverless function, you can safely use service account credentials without exposing them to end users.
+
+Switching to the Admin SDK in your serverless function should resolve the "insufficient permission" error and allow your Firestore updates to proceed.

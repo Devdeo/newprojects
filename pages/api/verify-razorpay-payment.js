@@ -26,6 +26,7 @@ export default async function handler(req, res) {
 
     // If userId and quantity are provided, update the user's credit balance in Firebase
     if (userId && quantity) {
+      console.log(userId, quantity)
       try {
         // Query the user document by UID
         const q = query(collection(db, "users"), where("uid", "==", userId));
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
             orderId: razorpay_order_id,
             timestamp: serverTimestamp()
           });
+          
         }
       } catch (dbError) {
         console.error('Database update failed:', dbError);
