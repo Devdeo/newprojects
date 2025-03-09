@@ -1,13 +1,24 @@
-import { useState, useEffect } from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-import Navbar from '../components/Navbar';
-import { auth, db } from '../firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc, increment, collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import crypto from 'crypto';
-import styles from '../styles/Page.module.css';
-import Script from 'next/script';
+import { useState, useEffect } from "react";
+import Head from "next/head";
+import { useRouter } from "next/router";
+import Navbar from "../components/Navbar";
+import { auth, db } from "../firebase/config";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  increment,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import crypto from "crypto";
+import styles from "../styles/Page.module.css";
+import Script from "next/script";
 
 const PurchasePage = () => {
   const router = useRouter();
@@ -31,21 +42,21 @@ const PurchasePage = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
-        router.push('/');
+        router.push("/");
         return;
       }
 
       setUser(currentUser);
 
       try {
-        const userRef = doc(db, 'users', currentUser.uid);
+        const userRef = doc(db, "users", currentUser.uid);
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
           setUserData(userSnap.data());
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
       }
 
       setLoading(false);
@@ -69,16 +80,48 @@ const PurchasePage = () => {
       document.body.appendChild(script);
     });
   };
+  const update = async () => {
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(userRef);
+
+      // Make sure the user document exists
+      if (!docSnap.exists()) {
+        throw new Error("User document does not exist.");
+      }
+
+      // Update the user's credit balance
+      await updateDoc(userRef, {
+        creditBalance: increment(quantity),
+      });
+
+      // Reference the subcollection using the full path
+      const transactionsRef = collection(db, "users", user.uid, "wallets");
+
+      // Add the transaction record to the subcollection
+      await addDoc(transactionsRef, {
+        type: "credit_purchase",
+        amount: quantity * PRICE_PER_CREDIT,
+        quantity: quantity,
+        timestamp: serverTimestamp(),
+      });
+
+      // Redirect to dashboard with success message
+    } catch (error) {
+      alert(error.message);
+      alert("Something went wrong. Please try again later.");
+    }
+  };
 
   const handlePayment = async () => {
     if (!user) {
-      alert('Please log in to make a purchase');
-      router.push('/');
+      alert("Please log in to make a purchase");
+      router.push("/");
       return;
     }
 
     if (quantity < 10) {
-      alert('Minimum purchase is 10 credits');
+      alert("Minimum purchase is 10 credits");
       setQuantity(10);
       return;
     }
@@ -95,20 +138,20 @@ const PurchasePage = () => {
       }
 
       // Create order on the server
-      const orderResponse = await fetch('/api/create-razorpay-order', {
-        method: 'POST',
+      const orderResponse = await fetch("/api/create-razorpay-order", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           amount: quantity * PRICE_PER_CREDIT,
           userId: user.uid,
-          quantity: quantity
+          quantity: quantity,
         }),
       });
 
       const orderData = await orderResponse.json();
-      console.log('Order response:', orderData);
+      console.log("Order response:", orderData);
 
       if (orderData.error) {
         throw new Error(orderData.error);
@@ -119,72 +162,52 @@ const PurchasePage = () => {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: 'StreamScript',
+        name: "StreamScript",
         description: `Purchase ${quantity} credits`,
         order_id: orderData.id,
         handler: async function (response) {
           try {
             // Send verification request to our API
-            const verifyResponse = await fetch('/api/verify-razorpay-payment', {
-              method: 'POST',
+            const verifyResponse = await fetch("/api/verify-razorpay-payment", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                userId: user.uid,
-                quantity: quantity
+                
               }),
             });
 
             const verifyData = await verifyResponse.json();
 
-            if (!verifyData.success) {
-              throw new Error(verifyData.error || 'Payment verification failed');
+            if (verifyData.success != true) {
+              throw new Error(
+                verifyData.error || "Payment verification failed",
+              );
             }
 
             // Query the user document by UID to get updated data
-            const q = query(collection(db, "users"), where("uid", "==", user.uid));
-            const docs = await getDocs(q);
 
-            if (docs.docs.length === 1) {
-              // Update the main user document
-              const userRef = doc(db, "users", docs.docs[0].id);
-              await updateDoc(userRef, {
-                creditBalance: increment(quantity)
-              });
+            update();
+            // Redirect to dashboard with success message
+            window.location.href = "/dashboard?payment_success=true";
 
-              // Add transaction record to subcollection
-              const transactionsRef = collection(userRef, 'transactions');
-              await addDoc(transactionsRef, {
-                type: 'credit_purchase',
-                amount: quantity * PRICE_PER_CREDIT,
-                quantity: quantity,
-                paymentId: response.razorpay_payment_id,
-                orderId: response.razorpay_order_id,
-                timestamp: serverTimestamp()
-              });
-
-              // Redirect to dashboard with success message
-              router.push('/dashboard?payment_success=true');
-            } else {
-              throw new Error('User document not found');
-            }
           } catch (error) {
-            console.error('Payment verification failed:', error);
-            alert('Payment verification failed. Please contact support.');
+            console.error("Payment verification failed:", error);
+            alert("Payment verification failed. Please contact support.");
           } finally {
             setProcessing(false);
           }
         },
         prefill: {
-          name: userData?.name || user.displayName || '',
-          email: user.email || '',
+          name: userData?.name || user.displayName || "",
+          email: user.email || "",
         },
         theme: {
-          color: '#3399cc',
+          color: "#3399cc",
         },
       };
 
@@ -193,13 +216,12 @@ const PurchasePage = () => {
       razorpay.open();
 
       // Handle payment failure
-      razorpay.on('payment.failed', function (response) {
+      razorpay.on("payment.failed", function (response) {
         alert(`Payment failed: ${response.error.description}`);
         setProcessing(false);
       });
-
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error("Error creating order:", error);
       alert(`Failed to process payment: ${error.message}`);
       setProcessing(false);
     }
@@ -215,7 +237,10 @@ const PurchasePage = () => {
     <div className={styles.container}>
       <Head>
         <title>Purchase Credits - StreamScript</title>
-        <meta name="description" content="Purchase credits for your streaming needs" />
+        <meta
+          name="description"
+          content="Purchase credits for your streaming needs"
+        />
       </Head>
 
       <Script
@@ -230,23 +255,29 @@ const PurchasePage = () => {
           <h1 className={styles.title}>Purchase Credits</h1>
 
           <div className={styles.creditInfo}>
-            <p>Credits are used to pay for streaming time. Each credit allows for 1 hour of streaming.</p>
-            <p>Current credit balance: <strong>{userData?.creditBalance || 0}</strong></p>
+            <p>
+              Credits are used to pay for streaming time. Each credit allows for
+              1 hour of streaming.
+            </p>
+            <p>
+              Current credit balance:{" "}
+              <strong>{userData?.creditBalance || 0}</strong>
+            </p>
           </div>
 
           <div className={styles.purchaseCard}>
             <div className={styles.quantitySelector}>
               <h3>Select Quantity</h3>
               <div className={styles.quantityControls}>
-                <button 
+                <button
                   onClick={() => setQuantity(Math.max(10, quantity - 5))}
                   disabled={quantity <= 10}
                   className={styles.quantityButton}
                 >
                   -
                 </button>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   min="10"
                   value={quantity}
                   onChange={(e) => {
@@ -259,14 +290,16 @@ const PurchasePage = () => {
                   }}
                   className={styles.quantityInput}
                 />
-                <button 
+                <button
                   onClick={() => setQuantity(quantity + 5)}
                   className={styles.quantityButton}
                 >
                   +
                 </button>
               </div>
-              <p className={styles.minimumNotice}>Minimum purchase: 10 credits</p>
+              <p className={styles.minimumNotice}>
+                Minimum purchase: 10 credits
+              </p>
             </div>
 
             <div className={styles.priceSummary}>
@@ -284,17 +317,20 @@ const PurchasePage = () => {
               </div>
             </div>
 
-            <button 
-              className={styles.paymentButton} 
+            <button
+              className={styles.paymentButton}
               onClick={handlePayment}
               disabled={processing}
             >
-              {processing ? 'Processing...' : `Pay ₹${totalAmount.toFixed(2)}`}
+              {processing ? "Processing..." : `Pay ₹${totalAmount.toFixed(2)}`}
             </button>
           </div>
 
           <div className={styles.securityNote}>
-            <p>All payments are secure and encrypted. We use Razorpay for payment processing.</p>
+            <p>
+              All payments are secure and encrypted. We use Razorpay for payment
+              processing.
+            </p>
           </div>
         </div>
       </main>

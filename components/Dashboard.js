@@ -456,9 +456,7 @@ const Dashboard = () => {
               <div className={styles.statItem}>
                 <h3>Credit Balance</h3>
                 <p>{creditBalance} credits</p>
-                {userInfo.lastWalletUpdate && (
-                  <p className={styles.lastUpdate}>Last updated: {userInfo.lastWalletUpdate}</p>
-                )}
+             
                 <button 
                   className={styles.addCreditButton}
                   onClick={() => router.push('/purchase')}
