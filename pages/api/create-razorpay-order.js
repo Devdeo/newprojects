@@ -1,6 +1,6 @@
-
 const Razorpay = require("razorpay");
 const shortid = require("shortid");
+import { adminDb } from '../../firebase/admin';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     // Check if Razorpay keys are available
     if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       console.error('Razorpay keys missing');
-      return res.status(500).json({ error: 'Payment configuration error' });
+      return res.status(500).json({ error: 'Payment gateway configuration error' });
     }
 
     // Initialize Razorpay with proper error handling
@@ -32,13 +32,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Payment service initialization failed' });
     }
 
-    // Create order with proper options
-    const payment_capture = 1;
+    // Create order
     const options = {
       amount: Math.round(amount * 100), // Amount in smallest currency unit (paise)
       currency: 'INR',
       receipt: `receipt_${shortid.generate()}`,
-      payment_capture,
+      payment_capture: 1, // Auto-capture payment
       notes: {
         userId: userId,
         quantity: quantity || 1,
@@ -64,10 +63,35 @@ export default async function handler(req, res) {
       });
     }
 
+    // Store order in Firestore for reference (optional)
+    try {
+      const userQuery = await adminDb.collection('users').where('uid', '==', userId).limit(1).get();
+
+      if (!userQuery.empty) {
+        const userDoc = userQuery.docs[0];
+        const userRef = adminDb.collection('users').doc(userDoc.id);
+        const ordersRef = userRef.collection('orders');
+
+        await ordersRef.add({
+          orderId: order.id,
+          amount: amount,
+          currency: 'INR',
+          quantity: quantity,
+          status: 'created',
+          createdAt: new Date()
+        });
+      }
+    } catch (dbError) {
+      console.error('Error storing order in database:', dbError);
+      // Continue with the process even if DB storage fails
+    }
+
+    // Return order details
     return res.status(200).json({
       id: order.id,
       amount: order.amount,
-      currency: order.currency
+      currency: order.currency,
+      receipt: order.receipt
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
@@ -75,108 +99,5 @@ export default async function handler(req, res) {
       error: 'Failed to create order',
       details: error.message
     });
-  }
-}
-import Razorpay from 'razorpay';
-import { adminDb } from '../../firebase/admin';
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { amount, userId, quantity } = req.body;
-
-  try {
-    // Initialize Razorpay
-    const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-
-    // Create order
-    const options = {
-      amount: amount * 100, // Convert to smallest currency unit (paise)
-      currency: 'INR',
-      receipt: `receipt_order_${Date.now()}`,
-    };
-
-    const order = await razorpay.orders.create(options);
-
-    // Store order in Firestore for reference (optional)
-    const userQuery = await adminDb.collection('users').where('uid', '==', userId).limit(1).get();
-    
-    if (!userQuery.empty) {
-      const userDoc = userQuery.docs[0];
-      const userRef = adminDb.collection('users').doc(userDoc.id);
-      const ordersRef = userRef.collection('orders');
-      
-      await ordersRef.add({
-        orderId: order.id,
-        amount: amount,
-        currency: 'INR',
-        quantity: quantity,
-        status: 'created',
-        createdAt: new Date()
-      });
-    }
-
-    return res.status(200).json({
-      id: order.id,
-      amount: order.amount,
-      currency: order.currency,
-    });
-  } catch (error) {
-    console.error('Error creating Razorpay order:', error);
-    return res.status(500).json({ error: 'Failed to create order' });
-  }
-}
-const Razorpay = require("razorpay");
-const shortid = require("shortid");
-
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { amount, userId, quantity } = req.body;
-
-    if (!amount || !userId) {
-      return res.status(400).json({ error: 'Missing required parameters' });
-    }
-
-    // Check if Razorpay keys are available
-    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      console.error('Razorpay keys missing');
-      return res.status(500).json({ error: 'Payment gateway configuration error' });
-    }
-
-    // Initialize Razorpay
-    const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-
-    // Create order
-    const options = {
-      amount: amount * 100, // Razorpay expects amount in paise
-      currency: 'INR',
-      receipt: `receipt_order_${shortid.generate()}`,
-      payment_capture: 1, // Auto-capture payment
-    };
-
-    const order = await razorpay.orders.create(options);
-
-    // Return order details
-    return res.status(200).json({
-      id: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      receipt: order.receipt,
-    });
-  } catch (error) {
-    console.error('Error creating order:', error);
-    return res.status(500).json({ error: 'Failed to create order' });
   }
 }
