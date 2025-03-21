@@ -254,6 +254,24 @@ const Dashboard = () => {
       const userRef = doc(db, 'users', auth.currentUser.uid);
       const tasksRef = collection(userRef, 'tasks');
 
+      // Upload video file first
+      const email = auth.currentUser.email;
+      const formData = new FormData();
+      formData.append('video', videoFile);
+      
+      // Upload video to local server
+      const uploadResponse = await fetch(`http://localhost:5000/upload/${email}`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload video');
+      }
+      
+      const { videoId } = await uploadResponse.json();
+
+      // Create task data with video ID
       const taskData = {
         title: newTask.title,
         hours: parseInt(newTask.hours) || 1,
@@ -261,7 +279,8 @@ const Dashboard = () => {
         streamKey: newTask.key,
         status: newTask.scheduleType === 'schedule' ? 'scheduled' : 'active',
         createdAt: serverTimestamp(),
-        videoUrl: ''
+        videoUrl: '',
+        videoId: videoId
       };
 
       // Add scheduling data if provided
@@ -274,41 +293,36 @@ const Dashboard = () => {
 
       const taskDoc = await addDoc(tasksRef, taskData);
 
-      if (videoFile) {
-        const formData = new FormData();
-        formData.append('video', videoFile);
-        formData.append('taskId', taskDoc.id);
-        formData.append('username', userInfo.name);
-        formData.append('streamKey', newTask.key);
-        formData.append('title', newTask.title);
-        formData.append('hours', newTask.hours);
+      // Start the stream with the obtained video ID
+      const startResponse = await fetch(`http://localhost:5000/start/${videoId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          streamKey: newTask.key,
+          scheduleType: newTask.scheduleType,
+          startTime: newTask.startTime,
+          endTime: newTask.endTime,
+          duration: newTask.hours,
+          durationType: newTask.durationType,
+          taskId: taskDoc.id
+        }),
+      });
 
-        if (newTask.scheduleType === 'schedule') {
-          formData.append('scheduleType', 'schedule');
-          formData.append('startTime', newTask.startTime);
-          formData.append('endTime', newTask.endTime);
-        } else if (newTask.endTime) {
-          formData.append('scheduleType', 'now-with-end');
-          formData.append('endTime', newTask.endTime);
-        }
-
-        const response = await fetch('https://eb4bf809-0913-457d-9e00-c8d2f4958056-00-3s9tya49ey7lx.pike.repl.co/upload-video', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to upload video');
-        }
+      if (!startResponse.ok) {
+        throw new Error('Failed to start stream');
       }
 
+      // Update state and remaining code...
       const newTaskData = {
         id: taskDoc.id,
         title: newTask.title,
         hours: parseInt(newTask.hours) || 1,
         streamKey: newTask.key,
         status: newTask.scheduleType === 'schedule' ? 'scheduled' : 'active',
-        createdAt: new Date()
+        createdAt: new Date(),
+        videoId: videoId
       };
 
       if (newTask.scheduleType === 'schedule') {
