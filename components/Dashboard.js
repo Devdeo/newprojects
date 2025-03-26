@@ -41,7 +41,7 @@ const Dashboard = () => {
     scheduleType: 'now',
     startTime: '',
     endTime: '',
-    durationType: 'hours',
+    durationType: 'loop',
   });
   const [videoFile, setVideoFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -104,6 +104,29 @@ const Dashboard = () => {
     ].filter(Boolean).join(':');
   };
 
+  // Calculate maximum loops based on video duration and credits
+  const calculateMaxLoops = () => {
+    if (!fileDetails.duration || creditBalance <= 0) return 1;
+    
+    // Parse duration (format: HH:MM:SS or MM:SS)
+    const durationParts = fileDetails.duration.split(':');
+    let totalMinutes = 0;
+    
+    if (durationParts.length === 3) {
+      // HH:MM:SS format
+      totalMinutes = parseInt(durationParts[0]) * 60 + parseInt(durationParts[1]);
+    } else if (durationParts.length === 2) {
+      // MM:SS format
+      totalMinutes = parseInt(durationParts[0]);
+    }
+    
+    if (totalMinutes === 0) return 1; // Prevent division by zero
+    
+    // 1 credit = 60 minutes of streaming
+    const maxLoopsPerCredit = Math.floor(60 / totalMinutes);
+    return Math.floor(maxLoopsPerCredit * creditBalance);
+  };
+
   const handleVideoChange = async (e) => {
     if (e.target.files[0]) {
       const file = e.target.files[0];
@@ -129,6 +152,9 @@ const Dashboard = () => {
           size: size,
           format: format
         });
+        
+        // Reset the hours field when a new video is uploaded
+        setNewTask(prev => ({...prev, hours: '1'}));
       } catch (error) {
         console.error('Error getting video details:', error);
       }
@@ -408,22 +434,10 @@ const Dashboard = () => {
           Create Live
         </button>
         <button 
-          className={activeTab === 'active-live' ? styles.active : ''} 
-          onClick={() => setActiveTab('active-live')}
+          className={activeTab === 'live-history' ? styles.active : ''} 
+          onClick={() => setActiveTab('live-history')}
         >
-          Active Live
-        </button>
-        <button 
-          className={activeTab === 'schedule-live' ? styles.active : ''} 
-          onClick={() => setActiveTab('schedule-live')}
-        >
-          Schedule Live
-        </button>
-        <button 
-          className={activeTab === 'previous-live' ? styles.active : ''} 
-          onClick={() => setActiveTab('previous-live')}
-        >
-          Previous Live
+          Live History
         </button>
         <button 
           className={activeTab === 'wallet-history' ? styles.active : ''} 
@@ -518,8 +532,6 @@ const Dashboard = () => {
                 required
               />
 
-
-
               <div className={styles.formGroup}>
                 <label>Upload Video File</label>
                 <input
@@ -603,281 +615,76 @@ const Dashboard = () => {
               <div className={styles.streamOptions}>
                 <h3>Streaming Options</h3>
 
-                <div className={styles.selectOptionContainer}>
-                  <select
-                    className={styles.streamTypeSelect}
-                    value={newTask.scheduleType}
-                    onChange={(e) => setNewTask({...newTask, scheduleType: e.target.value})}
-                  >
-                    <option value="now">Live Now</option>
-                    <option value="schedule">Schedule Live</option>
-                  </select>
-                </div>
-
-                {(!newTask.scheduleType || newTask.scheduleType === 'now') && (
-                  <div className={styles.nowOptions}>
-                    <div className={styles.formGroup}>
-                      <label>Stream Duration</label>
-                      <div className={styles.durationTypeContainer}>
-                        <select 
-                          className={styles.durationTypeSelect}
-                          value={newTask.durationType || 'hours'}
-                          onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
-                        >
-                          <option value="hours">Hours</option>
-                          <option value="loop">Loop</option>
-                        </select>
-                        {newTask.durationType === 'loop' ? (
-                          <div className={styles.numberInputGroup}>
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue > 1) {
-                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) <= 1}
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              placeholder="Number of Loops"
-                              value={newTask.hours}
-                              onChange={(e) => {
-                                const maxLoops = Math.floor(creditBalance);
-                                const inputValue = parseInt(e.target.value);
-                                if (!isNaN(inputValue) && inputValue > maxLoops) {
-                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
-                                  setNewTask({...newTask, hours: maxLoops.toString()});
-                                } else {
-                                  setNewTask({...newTask, hours: e.target.value});
-                                }
-                              }}
-                              required
-                              min="1"
-                              max={Math.floor(creditBalance)}
-                            />
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const maxLoops = Math.floor(creditBalance);
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue < maxLoops) {
-                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
-                                } else {
-                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        ) : (
-                          <div className={styles.numberInputGroup}>
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue > 1) {
-                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) <= 1}
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              placeholder="Hours"
-                              value={newTask.hours}
-                              onChange={(e) => {
-                                const maxHours = Math.floor(creditBalance);
-                                const inputValue = parseInt(e.target.value);
-                                if (!isNaN(inputValue) && inputValue > maxHours) {
-                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
-                                  setNewTask({...newTask, hours: maxHours.toString()});
-                                } else {
-                                  setNewTask({...newTask, hours: e.target.value});
-                                }
-                              }}
-                              required
-                              min="1"
-                              max={Math.floor(creditBalance)}
-                            />
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const maxHours = Math.floor(creditBalance);
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue < maxHours) {
-                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
-                                } else {
-                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <small className={styles.creditInfo}>
-                        {newTask.durationType === 'loop' 
-                          ? `Each loop costs 1 credit. Maximum: ${Math.floor(creditBalance)} loops.` 
-                          : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
-                      </small>
-                      <div className={styles.addCreditsContainer}>
+                <div className={styles.nowOptions}>
+                  <div className={styles.formGroup}>
+                    <label>Number of Loops</label>
+                    <div className={styles.durationTypeContainer}>
+                      <div className={styles.numberInputGroup}>
                         <button 
-                          type="button" 
-                          className={styles.addCreditsButton}
-                          onClick={() => router.push('/purchase')}
+                          type="button"
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const currentValue = parseInt(newTask.hours) || 0;
+                            if (currentValue > 1) {
+                              setNewTask({...newTask, hours: (currentValue - 1).toString()});
+                            }
+                          }}
+                          disabled={parseInt(newTask.hours) <= 1}
                         >
-                          Add Credits
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          placeholder="Number of Loops"
+                          value={newTask.hours}
+                          onChange={(e) => {
+                            const maxLoops = calculateMaxLoops();
+                            const inputValue = parseInt(e.target.value);
+                            if (!isNaN(inputValue) && inputValue > maxLoops) {
+                              alert(`You can only loop up to ${maxLoops} times with your current credit balance and video duration.`);
+                              setNewTask({...newTask, hours: maxLoops.toString()});
+                            } else {
+                              setNewTask({...newTask, hours: e.target.value});
+                            }
+                          }}
+                          required
+                          min="1"
+                          max={calculateMaxLoops()}
+                        />
+                        <button 
+                          type="button"
+                          className={styles.numberInputButton}
+                          onClick={() => {
+                            const maxLoops = calculateMaxLoops();
+                            const currentValue = parseInt(newTask.hours) || 0;
+                            if (currentValue < maxLoops) {
+                              setNewTask({...newTask, hours: (currentValue + 1).toString()});
+                            } else {
+                              alert(`You can only loop up to ${maxLoops} times with your current credit balance and video duration.`);
+                            }
+                          }}
+                          disabled={parseInt(newTask.hours) >= calculateMaxLoops()}
+                        >
+                          +
                         </button>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {newTask.scheduleType === 'schedule' && (
-                  <div className={styles.scheduleOptions}>
-                    <div className={styles.formGroup}>
-                      <label>Start Date/Time</label>
-                      <input
-                        type="datetime-local"
-                        required
-                        onChange={(e) => setNewTask({...newTask, startTime: e.target.value})}
-                      />
-                    </div>
-                    <div className={styles.formGroup}>
-                      <label>Stream Duration</label>
-                      <div className={styles.durationTypeContainer}>
-                        <select 
-                          className={styles.durationTypeSelect}
-                          value={newTask.durationType || 'hours'}
-                          onChange={(e) => setNewTask({...newTask, durationType: e.target.value})}
-                        >
-                          <option value="hours">Hours</option>
-                          <option value="loop">Loop</option>
-                        </select>
-                        {newTask.durationType === 'loop' ? (
-                          <div className={styles.numberInputGroup}>
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue > 1) {
-                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) <= 1}
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              placeholder="Number of Loops"
-                              value={newTask.hours}
-                              onChange={(e) => {
-                                const maxLoops = Math.floor(creditBalance);
-                                const inputValue = parseInt(e.target.value);
-                                if (!isNaN(inputValue) && inputValue > maxLoops) {
-                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
-                                  setNewTask({...newTask, hours: maxLoops.toString()});
-                                } else {
-                                  setNewTask({...newTask, hours: e.target.value});
-                                }
-                              }}
-                              required
-                              min="1"
-                              max={Math.floor(creditBalance)}
-                            />
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const maxLoops = Math.floor(creditBalance);
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue < maxLoops) {
-                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
-                                } else {
-                                  alert(`You can only loop up to ${maxLoops} times with your current credit balance.`);
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        ) : (
-                          <div className={styles.numberInputGroup}>
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue > 1) {
-                                  setNewTask({...newTask, hours: (currentValue - 1).toString()});
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) <= 1}
-                            >
-                              −
-                            </button>
-                            <input
-                              type="number"
-                              placeholder="Hours"
-                              value={newTask.hours}
-                              onChange={(e) => {
-                                const maxHours = Math.floor(creditBalance);
-                                const inputValue = parseInt(e.target.value);
-                                if (!isNaN(inputValue) && inputValue > maxHours) {
-                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
-                                  setNewTask({...newTask, hours: maxHours.toString()});
-                                } else {
-                                  setNewTask({...newTask, hours: e.target.value});
-                                }
-                              }}
-                              required
-                              min="1"
-                              max={Math.floor(creditBalance)}
-                            />
-                            <button 
-                              type="button"
-                              className={styles.numberInputButton}
-                              onClick={() => {
-                                const maxHours = Math.floor(creditBalance);
-                                const currentValue = parseInt(newTask.hours) || 0;
-                                if (currentValue < maxHours) {
-                                  setNewTask({...newTask, hours: (currentValue + 1).toString()});
-                                } else {
-                                  alert(`You can only stream up to ${maxHours} hours with your current credit balance.`);
-                                }
-                              }}
-                              disabled={parseInt(newTask.hours) >= Math.floor(creditBalance)}
-                            >
-                              +
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <small className={styles.creditInfo}>
-                        {newTask.durationType === 'loop' 
-                          ? `Each loop costs 1 credit. Maximum: ${Math.floor(creditBalance)} loops.` 
-                          : `Each hour costs 1 credit. Maximum: ${Math.floor(creditBalance)} hours.`}
-                      </small>
+                    <small className={styles.creditInfo}>
+                      {fileDetails.duration 
+                        ? `With your current credit balance (${creditBalance} credits), you can loop this video up to ${calculateMaxLoops()} times.` 
+                        : "Upload a video to see the maximum number of loops available."}
+                    </small>
+                    <div className={styles.addCreditsContainer}>
+                      <button 
+                        type="button" 
+                        className={styles.addCreditsButton}
+                        onClick={() => router.push('/purchase')}
+                      >
+                        Add Credits
+                      </button>
                     </div>
                   </div>
-                )}
+                </div>
               </div>
 
               <button 
@@ -885,7 +692,7 @@ const Dashboard = () => {
                 disabled={loading || !isFileUploaded || isUploading} 
                 className={styles.submitButton}
               >
-                {loading ? 'Processing...' : newTask.scheduleType === 'schedule' ? 'Schedule Stream' : 'Start Live Stream'}
+                {loading ? 'Processing...' : 'Start Live Stream'}
               </button>
 
               {uploadStatus && (
@@ -920,42 +727,83 @@ const Dashboard = () => {
               )}
             </form>
           </div>
-        )}{activeTab === 'active-live' && (
+        )}
+        {activeTab === 'live-history' && (
           <div>
-            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Active Live Streams</h2>
+            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Live Stream History</h2>
+            
+            <div className={styles.liveHistoryFilter}>
+              <select 
+                className={styles.historyFilterSelect}
+                onChange={(e) => {
+                  // Filter handling logic here
+                  console.log("Filter by:", e.target.value);
+                }}
+                defaultValue="all"
+              >
+                <option value="all">All Streams</option>
+                <option value="active">Active Streams</option>
+                <option value="scheduled">Scheduled Streams</option>
+                <option value="completed">Completed Streams</option>
+              </select>
+            </div>
+            
             <div className={styles.tableContainer}>
               <table className={`${styles.dataTable} ${styles.borderedTable}`}>
                 <thead>
                   <tr>
                     <th>Title</th>
-                    <th>Hours</th>
+                    <th>Loops</th>
                     <th>Stream Key</th>
                     <th>Status</th>
-                    <th>Start Time</th>
+                    <th>Date</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tasks
-                    .filter(task => task.status === 'active')
                     .slice((activePage - 1) * 10, activePage * 10)
                     .map(task => (
                       <tr key={task.id}>
                         <td>{task.title}</td>
-                        <td>{task.hours} hours</td>
+                        <td>{task.hours} loops</td>
                         <td>{task.streamKey}</td>
-                        <td><span className={styles.statusBadge}>{task.status}</span></td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${
+                            task.status === 'active' ? styles.statusActive : 
+                            task.status === 'scheduled' ? styles.statusScheduled : 
+                            styles.statusCompleted
+                          }`}>
+                            {task.status}
+                          </span>
+                        </td>
                         <td>{task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Just now'}</td>
+                        <td>
+                          {task.status === 'active' && (
+                            <button className={`${styles.actionButton} ${styles.stopButton}`}>Stop</button>
+                          )}
+                          {task.status === 'scheduled' && (
+                            <>
+                              <button className={`${styles.actionButton} ${styles.liveNowButton}`}>Live Now</button>
+                              <button className={`${styles.actionButton} ${styles.cancelButton}`}>Cancel</button>
+                            </>
+                          )}
+                          {task.status === 'completed' && (
+                            <button className={`${styles.actionButton} ${styles.restartButton}`}>Restart</button>
+                          )}
+                          <button className={styles.actionButton}>Details</button>
+                        </td>
                       </tr>
                     ))}
-                  {!tasks.filter(task => task.status === 'active').length && (
+                  {!tasks.length && (
                     <tr>
-                      <td colSpan="5" className={styles.emptyMessage}>No active streams found.</td>
+                      <td colSpan="6" className={styles.emptyMessage}>No streams found.</td>
                     </tr>
                   )}
                 </tbody>
               </table>
 
-              {tasks.filter(task => task.status === 'active').length > 0 && (
+              {tasks.length > 0 && (
                 <div className={styles.pagination}>
                   <button 
                     className={styles.paginationButton} 
@@ -965,145 +813,12 @@ const Dashboard = () => {
                     Previous
                   </button>
                   <span className={styles.pageInfo}>
-                    Page {activePage} of {Math.ceil(tasks.filter(task => task.status === 'active').length / 10)}
+                    Page {activePage} of {Math.ceil(tasks.length / 10)}
                   </span>
                   <button 
                     className={styles.paginationButton} 
-                    disabled={activePage === Math.ceil(tasks.filter(task => task.status === 'active').length / 10)}
+                    disabled={activePage === Math.ceil(tasks.length / 10)}
                     onClick={() => setActivePage(activePage + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'schedule-live' && (
-          <div>
-            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Schedule Live Stream</h2>
-            <div className={styles.tableContainer}>
-              <table className={`${styles.dataTable} ${styles.borderedTable}`}>
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Hours</th>
-                    <th>Stream Key</th>
-                    <th>Scheduled Start</th>
-                    <th>Scheduled End</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks
-                    .filter(task => task.status === 'scheduled')
-                    .slice((schedulePage - 1) * 10, schedulePage * 10)
-                    .map(task => (
-                      <tr key={task.id}>
-                        <td>{task.title}</td>
-                        <td>{task.hours} hours</td>
-                        <td>{task.streamKey}</td>
-                        <td>{task.scheduledStartTime ? new Date(task.scheduledStartTime).toLocaleString() : 'N/A'}</td>
-                        <td>{task.scheduledEndTime ? new Date(task.scheduledEndTime).toLocaleString() : 'N/A'}</td>
-                        <td><span className={styles.statusBadge}>{task.status}</span></td>
-                        <td>
-                          <button className={`${styles.actionButton} ${styles.liveNowButton}`}>Live Now</button>
-                          <button className={styles.actionButton}>Edit</button>
-                          <button className={styles.actionButton}>Cancel</button>
-                        </td>
-                      </tr>
-                    ))}
-                  {!tasks.filter(task => task.status === 'scheduled').length && (
-                    <tr>
-                      <td colSpan="7" className={styles.emptyMessage}>No scheduled streams found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              {tasks.filter(task => task.status === 'scheduled').length > 0 && (
-                <div className={styles.pagination}>
-                  <button 
-                    className={styles.paginationButton} 
-                    disabled={schedulePage === 1}
-                    onClick={() => setSchedulePage(schedulePage - 1)}
-                  >
-                    Previous
-                  </button>
-                  <span className={styles.pageInfo}>
-                    Page {schedulePage} of {Math.ceil(tasks.filter(task => task.status === 'scheduled').length / 10)}
-                  </span>
-                  <button 
-                    className={styles.paginationButton} 
-                    disabled={schedulePage === Math.ceil(tasks.filter(task => task.status=== 'scheduled').length / 10)}
-                    onClick={() => setSchedulePage(schedulePage + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'previous-live' && (
-          <div>
-            <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Previous Live Streams</h2>
-            <div className={styles.tableContainer}>
-              <table className={styles.dataTable}>
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Duration</th>
-                    <th>Stream Key</th>
-                    <th>Status</th>
-                    <th>Stream Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks
-                    .filter(task => task.status === 'completed')
-                    .slice((previousPage - 1) * 10, previousPage * 10)
-                    .map(task => (
-                      <tr key={task.id}>
-                        <td>{task.title}</td>
-                        <td>{task.hours} hours</td>
-                        <td>{task.streamKey}</td>
-                        <td><span className={styles.statusBadge}>{task.status}</span></td>
-                        <td>{task.createdAt ? new Date(task.createdAt).toLocaleString() : 'Recently'}</td>
-                        <td>
-                          <button className={styles.actionButton}>Restart</button>
-                          <button className={styles.actionButton}>View</button>
-                        </td>
-                      </tr>
-                    ))}
-                  {!tasks.filter(task => task.status === 'completed').length && (
-                    <tr>
-                      <td colSpan="6" className={styles.emptyMessage}>No previous streams found.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              {tasks.filter(task => task.status === 'completed').length > 0 && (
-                <div className={styles.pagination}>
-                  <button 
-                    className={styles.paginationButton} 
-                    disabled={previousPage === 1}
-                    onClick={() => setPreviousPage(previousPage - 1)}
-                  >
-                    Previous
-                  </button>
-                  <span className={styles.pageInfo}>
-                    Page {previousPage} of {Math.ceil(tasks.filter(task => task.status === 'completed').length / 10)}
-                  </span>
-                  <button 
-                    className={styles.paginationButton} 
-                    disabled={previousPage === Math.ceil(tasks.filter(task => task.status === 'completed').length / 10)}
-                    onClick={() => setPreviousPage(previousPage + 1)}
                   >
                     Next
                   </button>
