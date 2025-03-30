@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { auth, googleProvider, db } from '../firebase/config';
@@ -31,14 +30,27 @@ const LoginForm = ({ onClose }) => {
       const docSnap = await getDoc(userRef);
       
       if (!docSnap.exists()) {
+        // New user - add 10 minutes of streaming time (1/6 hour)
+        const initialCredit = 1/6;
+        
         await setDoc(userRef, {
           email: user.email,
           name: additionalData.name || user.displayName || '',
           authProvider: additionalData.authProvider || 'email',
           emailVerified: user.emailVerified,
-          creditBalance: 0,
+          creditBalance: initialCredit,
           createdAt: new Date().toISOString(),
           ...additionalData
+        });
+        
+        // Add wallet record for the welcome credit
+        const walletsRef = doc(db, 'users', user.uid, 'wallets', 'welcome_credit');
+        await setDoc(walletsRef, {
+          amount: initialCredit,
+          type: 'credit',
+          description: 'Welcome bonus credit',
+          timestamp: new Date(),
+          balance: initialCredit
         });
       } else if (user.emailVerified) {
         // Update email verification status if user is now verified
