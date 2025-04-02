@@ -20,7 +20,7 @@ export default function About() {
 
           <section className={styles.section}>
             <h2>Our Mission</h2>
-            <p>We're dedicated to simplifying continuous streaming for content creators, making it effortless to reach your audience around the clock. Our goal is to provide reliable, innovative tools that help you maintain an active channel presence without being tied to your computer.</p>
+            <p>Were dedicated to simplifying continuous streaming for content creators, making it effortless to reach your audience around the clock. Our goal is to provide reliable, innovative tools that help you maintain an active channel presence without being tied to your computer.</p>
           </section>
 
           <section className={styles.section}>
