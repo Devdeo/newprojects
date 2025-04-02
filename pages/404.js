@@ -13,7 +13,7 @@ const NotFound = () => {
       <main className={styles.main}>
         <h1 className={styles.title}>404</h1>
         <p className={styles.description}>
-          The page you are looking for doesn't exist.
+          The page you are looking for doesnt exist.
         </p>
         <Link className={styles.back} href="/">
           Back to Homepage
