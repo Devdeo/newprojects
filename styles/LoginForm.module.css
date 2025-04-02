@@ -1,3 +1,8 @@
+.localRoot :root {
+  --primary-color: #1a73e8; /* Blue */
+  --secondary-color: #fbbc05; /* Yellow */
+}
+
 .overlay {
   position: fixed;
   top: 0;
@@ -63,7 +68,7 @@
 }
 
 .forgotPassword a {
-  color: #0070f3;
+  color: var(--primary-color);
   text-decoration: none;
   font-size: 0.9rem;
 }
@@ -71,7 +76,7 @@
 .submitButton {
   width: 100%;
   padding: 0.9rem;
-  background-color: #0070f3;
+  background-color: #357ae8;
   color: white;
   border: none;
   border-radius: 8px;
@@ -82,7 +87,7 @@
 }
 
 .submitButton:hover {
-  background-color: #0051b3;
+  background-color: red;
 }
 
 .submitButton:disabled {
