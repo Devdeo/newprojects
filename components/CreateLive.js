@@ -377,7 +377,7 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
             className={(!isFileUploaded || isUploading) ? styles.disabledInput : ''}
           />
           <small style={{ display: 'block', marginTop: '8px', color: '#64748b' }}>
-            You can find your stream key in your YouTube Studio dashboard under "Stream" settings
+            You can find your stream key in your YouTube Studio dashboard under Stream settings
           </small>
         </div>
         {showStreamKeyInfo && (
