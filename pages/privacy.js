@@ -1,4 +1,3 @@
-
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -11,7 +10,7 @@ export default function Privacy() {
         <title>Privacy Policy - Video Loop Streaming</title>
       </Head>
       <Navbar />
-      <main className={styles.main}>
+      <main className={styles.main} style={{ color: 'black' }}>
         <h1>Privacy Policy</h1>
         <div className={styles.content}>
           <p>Last updated: {new Date().toLocaleDateString()}</p>

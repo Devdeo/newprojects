@@ -67,8 +67,8 @@ const DashboardPage = () => {
   return (
     <div>
       <Head>
-        <title>Dashboard - My Site</title>
-        <meta name="description" content="User dashboard" />
+        <title>Dashboard - Loop Live on youtube</title>
+        <meta name="Loop Live" content="User dashboard" />
       </Head>
       <Navbar />
       

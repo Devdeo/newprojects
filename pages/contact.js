@@ -1,4 +1,3 @@
-
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -11,13 +10,16 @@ export default function Contact() {
         <title>Contact Us</title>
       </Head>
       <Navbar />
-      <main className={styles.main}>
+      <main className={styles.main} style={{ color: 'black' }}>
         <h1>Contact Us</h1>
         <div className={styles.content}>
           <form className={styles.form}>
             <input type="text" placeholder="Name" required />
+            <br/>
             <input type="email" placeholder="Email" required />
+            <br/>
             <textarea placeholder="Message" required></textarea>
+            <br/>
             <button type="submit">Send Message</button>
           </form>
         </div>

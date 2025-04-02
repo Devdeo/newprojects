@@ -8,8 +8,8 @@ const PricingPage = () => {
   return (
     <div>
       <Head>
-        <title>Dashboard - My Site</title>
-        <meta name="description" content="User dashboard" />
+        <title>Pricing - Loop Live on youtube</title>
+        <meta name="Loop Live" content="pricing" />
       </Head>
       <Navbar />
       <motion.section 

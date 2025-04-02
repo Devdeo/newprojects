@@ -31,8 +31,8 @@ const Home = () => {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Digital Services - Home</title>
-        <meta name="description" content="Digital services for your business" />
+        <title>Loop Live on youtube - Home</title>
+        <meta name="Loop Live" content="Stream your videos 24/7 with automated looping system." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -49,15 +49,22 @@ const Home = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
+            style={{
+              fontSize: '3rem',
+              fontWeight: '700',
+              color: '#1f2937', // Changed to a dark gray color for better visibility
+              textAlign: 'center',
+            }}
           >
-            Loop Your Videos on YouTube Live
+            Upload Video and Stream on YouTube 
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
+            style={{ fontSize: '1.25rem', color: '#6b7280', maxWidth: '600px', margin: '1rem auto' }}
           >
-            Stream your videos 24/7 with automated looping system
+            Stream your videos 24/7 with an automated looping system.
           </motion.p>
         </motion.section>
 
@@ -68,9 +75,9 @@ const Home = () => {
           transition={{ delay: 0.7 }}
         >
           <div className={styles.featureGrid}>
-            <div className={styles.featureCard}>
-              <h3>24/7 Streaming</h3>
-              <p>Keep your content streaming continuously without interruption</p>
+            <div className={styles.featureCard} style={{ padding: '2rem', borderRadius: '12px', background: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' }}>
+              <h3 style={{ color: '#3b82f6', fontSize: '1.5rem' }}>24/7 Streaming</h3>
+              <p style={{ color: '#6b7280', lineHeight: '1.75' }}>Keep your content streaming continuously without interruption.</p>
             </div>
             <div className={styles.featureCard}>
               <h3>Easy Setup</h3>
@@ -99,7 +106,7 @@ const Home = () => {
             <PricingCard 
               title="Credit" 
               price="10" 
-              features={['1 Hour Processing', '250MB File Size', 'Priority Support', 'Per Credit', 'Minimum 10 Credits (₹100)']}
+              features={['1 Hour Processing',  'Priority Support', '1 Hours Per Credit', 'Minimum 10 Credits (₹100)']}
             />
           </div>
         </motion.section>

@@ -1,4 +1,3 @@
-
 import Head from 'next/head';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -11,7 +10,7 @@ export default function About() {
         <title>About - Video Loop Streaming</title>
       </Head>
       <Navbar />
-      <main className={styles.main}>
+      <main className={styles.main} style={{ color: 'black' }}>
         <h1>About Us</h1>
         <div className={styles.content}>
           <section className={styles.section}>

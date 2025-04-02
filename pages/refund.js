@@ -11,7 +11,7 @@ export default function RefundPolicy() {
         <title>Payment Refund Policy - Video Loop Streaming</title>
       </Head>
       <Navbar />
-      <main className={styles.main}>
+      <main className={styles.main} style={{ color: 'black' }}>
         <h1>Payment Refund Policy</h1>
         <div className={styles.content}>
           <p>Last updated: {new Date().toLocaleDateString()}</p>
