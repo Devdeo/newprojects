@@ -1,4 +1,4 @@
-
+import Link from 'next/link'
 import {useState, useEffect} from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
@@ -92,7 +92,7 @@ const DashboardPage = () => {
               </button>
               
               <p className={styles.refreshNote}>
-                Already verified? Try <a href="/dashboard" className={styles.refreshLink}>refreshing the page</a>.
+                Already verified? Try <Link href="/dashboard" className={styles.refreshLink}>refreshing the page</Link>.
               </p>
             </div>
           </main>
