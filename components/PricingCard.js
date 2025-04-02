@@ -1,4 +1,3 @@
-
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import styles from '../styles/PricingCard.module.css';
@@ -72,14 +71,14 @@ const PricingCard = ({ title, price, features }) => {
   };
 
   return (
-    <div className={styles.card}>
-      <h3>{title}</h3>
-      <div className={styles.price}>
+    <div className={styles.card} style={{ padding: '2rem', borderRadius: '12px', background: '#ffffff', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)', transition: 'transform 0.3s ease' }}>
+      <h3 style={{ fontSize: '1.5rem', color: '#1f2937' }}>{title}</h3>
+      <div className={styles.price} style={{ fontSize: '2rem', color: '#3b82f6', margin: '1rem 0' }}>
         {title === "Free" ? "Free" : `₹${price}/credit`}
       </div>
-      <ul>
+      <ul style={{ listStyle: 'none', padding: 0, color: '#6b7280', lineHeight: '1.75' }}>
         {features.map((feature, index) => (
-          <li key={index}>{feature}</li>
+          <li key={index} style={{ marginBottom: '0.5rem' }}>{feature}</li>
         ))}
       </ul>
       {user && title === "Credit" && (

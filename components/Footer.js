@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import styles from '../styles/Footer.module.css';
 
@@ -20,9 +19,9 @@ const Footer = () => {
         <div className={styles.social}>
           <h3>Follow Us</h3>
           <div className={styles.icons}>
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a>
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer">🐦</a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer">📘</a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">📸</a>
           </div>
         </div>
       </div>

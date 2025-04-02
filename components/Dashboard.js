@@ -2,14 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 import styles from '../styles/Dashboard.module.css';
 import { useRouter } from 'next/router';
 import { auth, db } from '../firebase/config';
-import { collection, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, serverTimestamp, query, orderBy, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy } from 'firebase/firestore';
 
-import { toast } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 
 import CreateLive from './CreateLive';
 import LiveHistory from './LiveHistory';
 import WalletHistory from './WalletHistory';
 import AccountSettings from './AccountSettings';
+import Navbar from './Navbar';
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -19,6 +20,7 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const sidebarRef = useRef(null);
+  const [showPaymentSuccessSign, setShowPaymentSuccessSign] = useState(false);
 
   // Handle click outside the sidebar to close menu in mobile view
   useEffect(() => {
@@ -39,200 +41,17 @@ const Dashboard = () => {
   
   // Handle tab switching with credit check
   const handleTabChange = (tab) => {
-    if (tab === 'create-live' && creditBalance <= 0) {
-      toast.error('You need credits to create a live stream. Redirecting to purchase page...');
-      setTimeout(() => {
-        router.push('/purchase');
-      }, 1500);
+    if (tab === 'create-live' && creditBalance < 1) {
+      toast.error('You need to add credits to create a live stream.');
       return;
     }
-    
     setActiveTab(tab);
   };
   
   const [userInfo, setUserInfo] = useState({ name: '', email: '' });
-  const [newTask, setNewTask] = useState({
-    title: '',
-    hours: '1',
-    key: '',
-    videoUrl: '',
-    scheduleType: 'now',
-    startTime: '',
-    endTime: '',
-    durationType: 'loop',
-  });
-  const [videoFile, setVideoFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [activePage, setActivePage] = useState(1);
-  const [schedulePage, setSchedulePage] = useState(1);
-  const [previousPage, setPreviousPage] = useState(1);
-  const [walletPage, setWalletPage] = useState(1);
+
+
   const [transactions, setTransactions] = useState([]);
-  const [uploadStatus, setUploadStatus] = useState('');
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isFileUploaded, setIsFileUploaded] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [fileDetails, setFileDetails] = useState({
-    duration: null,
-    size: null,
-    format: null
-  });
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-  
-  // Add credit button handler
-  const handleAddCredit = () => {
-    router.push('/purchase');
-  };
-
-  const getVideoFormat = (fileName) => {
-    const extension = fileName.split('.').pop().toLowerCase();
-    return extension;
-  };
-
-  const getVideoDuration = (file) => {
-    return new Promise((resolve) => {
-      const video = document.createElement('video');
-      video.preload = 'metadata';
-
-      video.onloadedmetadata = function() {
-        window.URL.revokeObjectURL(video.src);
-        const duration = video.duration;
-        resolve(duration);
-      };
-
-      video.src = URL.createObjectURL(file);
-    });
-  };
-
-  const formatDuration = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-
-    return [
-      hours > 0 ? String(hours).padStart(2, '0') : null,
-      String(minutes).padStart(2, '0'),
-      String(secs).padStart(2, '0')
-    ].filter(Boolean).join(':');
-  };
-
-  // Calculate maximum loops based on video duration and credits
-  const calculateMaxLoops = () => {
-    if (!fileDetails.duration || creditBalance <= 0) return 1;
-    
-    // Parse duration (format: HH:MM:SS or MM:SS)
-    const durationParts = fileDetails.duration.split(':');
-    let totalHours = 0;
-    
-    if (durationParts.length === 3) {
-      // HH:MM:SS format
-      totalHours = parseInt(durationParts[0]) + (parseInt(durationParts[1]) / 60);
-    } else if (durationParts.length === 2) {
-      // MM:SS format
-      totalHours = parseInt(durationParts[0]) / 60;
-    }
-    
-    if (totalHours === 0) return 1; // Prevent division by zero
-    
-    // Calculate maximum loops based on available credits (1 credit = 1 hour)
-    const maxLoops = Math.floor(creditBalance / totalHours);
-    
-    // Ensure at least 1 loop is available
-    return Math.max(1, maxLoops);
-  };
-
-  const handleVideoChange = async (e) => {
-    if (e.target.files[0]) {
-      const file = e.target.files[0];
-      
-      setVideoFile(file);
-      setIsFileUploaded(true);
-
-      // Get file details
-      const format = getVideoFormat(file.name);
-      const size = formatFileSize(file.size);
-
-      // Show processing state
-      setIsUploading(true);
-      setUploadStatus('processing');
-      setUploadProgress(0);
-
-      try {
-        // Get video duration
-        const durationInSeconds = await getVideoDuration(file);
-        const formattedDuration = formatDuration(durationInSeconds);
-
-        setFileDetails({
-          duration: formattedDuration,
-          size: size,
-          format: format
-        });
-        
-        // Calculate initial loops based on video duration and available credits
-        const maxLoops = calculateMaxLoops();
-        setNewTask(prev => ({...prev, hours: maxLoops.toString()}));
-
-        // Start the actual file upload
-        const email = auth.currentUser.email;
-        const formData = new FormData();
-        formData.append('video', file);
-
-        // Create XMLHttpRequest for upload with progress tracking
-        const xhr = new XMLHttpRequest();
-        
-        // Set up progress tracking
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            setUploadProgress(progress);
-            setUploadStatus('uploading');
-          }
-        };
-
-        // Handle upload completion
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            setUploadProgress(100);
-            setUploadStatus('ready');
-            setIsUploading(false);
-            toast.success('Video uploaded successfully!');
-          } else {
-            throw new Error('Upload failed');
-          }
-        };
-
-        // Handle upload errors
-        xhr.onerror = () => {
-          throw new Error('Upload failed');
-        };
-
-        // Start the upload
-        xhr.open('POST', `http://localhost:5000/upload/${email}`);
-        xhr.send(formData);
-
-      } catch (error) {
-        console.error('Error processing video:', error);
-        toast.error('Error processing video file. Please try again.');
-        setIsUploading(false);
-        setUploadStatus('error');
-        setUploadProgress(0);
-      }
-    } else {
-      setIsFileUploaded(false);
-      setVideoFile(null);
-      setFileDetails({
-        duration: null,
-        size: null,
-        format: null
-      });
-    }
-  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -292,6 +111,14 @@ const Dashboard = () => {
   useEffect(() => {
     if (router.query.payment_success === 'true') {
       toast.success('Payment successful! Your credits have been added.');
+      
+      // Show success sign and redirect to dashboard
+      setShowPaymentSuccessSign(true);
+      setTimeout(() => {
+        setShowPaymentSuccessSign(false);
+        router.replace('/dashboard', undefined, { shallow: true });
+      }, 2000);
+
       // Refresh user data to get updated balance
       const fetchUserData = async () => {
         try {
@@ -333,160 +160,7 @@ const Dashboard = () => {
   }, [router.query.payment_success, router]);
 
 
-  const handleCreateTask = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setUploadStatus('uploading');
-    setUploadProgress(0);
-    setIsUploading(true);
-
-    try {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
-      const userDoc = await getDoc(userRef);
-      const userData = userDoc.data();
-      
-      // Calculate credit cost based on video duration and loops
-      const durationParts = fileDetails.duration.split(':');
-      let totalHours = 0;
-      
-      if (durationParts.length === 3) {
-        // HH:MM:SS format
-        totalHours = parseInt(durationParts[0]) + (parseInt(durationParts[1]) / 60);
-      } else if (durationParts.length === 2) {
-        // MM:SS format
-        totalHours = parseInt(durationParts[0]) / 60;
-      }
-      
-      // Calculate total duration in hours (including loops)
-      const loops = parseInt(newTask.hours) || 1;
-      const totalHoursNeeded = totalHours * loops;
-      
-      // Verify user has enough credits
-      if (userData.creditBalance < totalHoursNeeded) {
-        throw new Error(`Insufficient credits. This stream requires ${totalHoursNeeded.toFixed(2)} credits, but you only have ${userData.creditBalance.toFixed(2)} credits.`);
-      }
-      
-      const tasksRef = collection(userRef, 'tasks');
-
-      // Upload video file first
-      const email = auth.currentUser.email;
-      const formData = new FormData();
-      formData.append('video', videoFile);
-      
-      // Upload video to local server
-      const uploadResponse = await fetch(`http://localhost:5000/upload/${email}`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload video');
-      }
-      
-      const { videoId } = await uploadResponse.json();
-
-      // Create task data with video ID
-      const taskData = {
-        title: newTask.title,
-        hours: parseInt(newTask.hours) || 1,
-        durationType: newTask.durationType || 'loop',
-        streamKey: newTask.key,
-        status: 'active',
-        createdAt: serverTimestamp(),
-        createdDate: new Date().toISOString(),
-        videoUrl: '',
-        videoId: videoId,
-        creditCost: totalHoursNeeded
-      };
-
-      const taskDoc = await addDoc(tasksRef, taskData);
-
-      // Start the stream with the obtained video ID
-      const startResponse = await fetch(`http://localhost:5000/start/${videoId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          streamKey: newTask.key,
-          loops: parseInt(newTask.hours) || 1,
-          durationType: newTask.durationType,
-          taskId: taskDoc.id
-        }),
-      });
-
-      if (!startResponse.ok) {
-        throw new Error('Failed to start stream');
-      }
-
-      // Deduct credits from user's balance
-      const newBalance = userData.creditBalance - totalHoursNeeded;
-      await updateDoc(userRef, {
-        creditBalance: newBalance,
-        lastWalletUpdate: new Date()
-      });
-      
-      // Add transaction record for the credit deduction
-      const transactionId = `stream_${Date.now()}`;
-      const transactionsRef = doc(db, 'users', auth.currentUser.uid, 'wallets', transactionId);
-      await setDoc(transactionsRef, {
-        amount: -totalHoursNeeded,
-        type: 'debit',
-        description: `Stream: ${newTask.title}`,
-        timestamp: new Date(),
-        balance: newBalance,
-        taskId: taskDoc.id
-      });
-
-      // Update local state to reflect new balance
-      setCreditBalance(newBalance);
-
-      // Update state and remaining code...
-      const newTaskData = {
-        id: taskDoc.id,
-        title: newTask.title,
-        hours: parseInt(newTask.hours) || 1,
-        streamKey: newTask.key,
-        status: 'active',
-        createdAt: new Date(),
-        createdDate: new Date().toISOString(),
-        videoId: videoId,
-        creditCost: totalHoursNeeded
-      };
-
-      setTasks([...tasks, newTaskData]);
-      setNewTask({ 
-        title: '', 
-        hours: '', 
-        key: '', 
-        videoUrl: '',
-        scheduleType: 'now',
-        startTime: '',
-        endTime: '',
-        durationType: 'loop'
-      });
-      setVideoFile(null);
-      setIsFileUploaded(false);
-      setIsUploading(false);
-      setUploadStatus('success');
-      setUploadProgress(100);
-
-      // Show success message with credit info
-      toast.success(`Stream started successfully! ${totalHoursNeeded.toFixed(2)} credits used.`);
-
-    } catch (error) {
-      console.error('Error creating task:', error);
-      setUploadStatus('error');
-      setUploadProgress(0);
-      toast.error(error.message || 'Failed to start stream. Please try again.');
-    } finally {
-      setLoading(false);
-      setTimeout(() => {
-        setUploadStatus('');
-        setUploadProgress(0);
-      }, 3000);
-    }
-  };
+ 
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -513,6 +187,13 @@ const Dashboard = () => {
 
   return (
     <div className={styles.dashboard}>
+      <Navbar />
+      <Toaster position="top-right" reverseOrder={false} />
+      {showPaymentSuccessSign && (
+        <div className={styles.successOverlay}>
+          <div className={styles.successSign}>✔</div>
+        </div>
+      )}
       <button 
         className={styles.menuToggle}
         onClick={() => setMenuVisible(!menuVisible)}
@@ -577,24 +258,26 @@ const Dashboard = () => {
 
       <div className={styles.content}>
         {isLoading ? (
-          <>
+          <div>
             <div className={styles.skeletonStatsBar}>
-              <div className={styles.skeletonStatItem}>
-                <div className={styles.skeletonText}></div>
-                <div className={styles.skeletonNumber}></div>
-                <div className={styles.skeletonButton}></div>
-              </div>
+              {[1, 2].map((_, index) => (
+                <div key={index} className={styles.skeletonStatItem}>
+                  <div className={styles.skeletonText}></div>
+                  <div className={styles.skeletonNumber}></div>
+                  <div className={styles.skeletonButton}></div>
+                </div>
+              ))}
             </div>
             <div className={styles.skeletonTasks}>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={styles.skeletonTaskCard}>
+              {[1, 2, 3].map((_, index) => (
+                <div key={index} className={styles.skeletonTaskCard}>
                   <div className={styles.skeletonTitle}></div>
                   <div className={styles.skeletonText}></div>
                   <div className={styles.skeletonText}></div>
                 </div>
               ))}
             </div>
-          </>
+          </div>
         ) : (
           <>
             <div className={styles.statsBar}>
@@ -622,22 +305,13 @@ const Dashboard = () => {
             <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Dashboard Overview</h2>
             <div className={styles.dashboardSummary}>
               <div className={styles.summaryCard}>
-                <h3>Active Streams</h3>
+                <h3>Live Streams created</h3>
                 <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'active').length}</p>
               </div>
-              <div className={styles.summaryCard}>
-                <h3>Scheduled Streams</h3>
-                <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'scheduled').length}</p>
-              </div>
-              <div className={styles.summaryCard}>
-                <h3>Previous Streams</h3>
-                <p className={styles.summaryNumber}>{tasks.filter(task => task.status === 'completed').length}</p>
-              </div>
+             
+             
             </div>
-            <div className={styles.recentActivity}>
-              <h3>Recent Activity</h3>
-              <p>No recent activity to display.</p>
-            </div>
+            
           </div>
         )}
 

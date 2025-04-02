@@ -3,24 +3,17 @@ import { useRouter } from 'next/router';
 import styles from '../styles/Dashboard.module.css';
 
 const WalletHistory = ({ creditBalance, transactions }) => {
-  const router = useRouter();
   const [walletPage, setWalletPage] = useState(1);
 
+  // Create a sorted copy of the transactions array (latest first)
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    const timeA = a.timestamp ? new Date(a.timestamp.toDate()).getTime() : 0;
+    const timeB = b.timestamp ? new Date(b.timestamp.toDate()).getTime() : 0;
+    return timeB - timeA; // descending order
+  });
+
   return (
-    <div>
-      <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Wallet History</h2>
-      <div className={styles.walletSummary}>
-        <div className={styles.walletBalance}>
-          <h3>Current Balance</h3>
-          <p className={styles.balanceAmount}>{creditBalance.toFixed(2)} credits</p>
-          <button 
-            className={styles.addCreditButton}
-            onClick={() => router.push('/purchase?quantity=10')}
-          >
-            Add Credits
-          </button>
-        </div>
-      </div>
+    <div>      
       <div className={styles.transactionHistory}>
         <h3>Transaction History</h3>
         <div className={styles.tableContainer}>
@@ -36,8 +29,8 @@ const WalletHistory = ({ creditBalance, transactions }) => {
               </tr>
             </thead>
             <tbody>
-              {transactions.length > 0 ? (
-                transactions
+              {sortedTransactions.length > 0 ? (
+                sortedTransactions
                   .slice((walletPage - 1) * 10, walletPage * 10)
                   .map((transaction, index) => (
                     <tr key={transaction.id || index}>
@@ -53,8 +46,8 @@ const WalletHistory = ({ creditBalance, transactions }) => {
                           : 'N/A'}
                       </td>
                       <td>
-                        {transaction.amount !== undefined 
-                          ? `${transaction.amount} credits` 
+                        {transaction.quantity !== undefined 
+                          ? `${transaction.quantity} credits` 
                           : 'N/A'}
                       </td>
                       <td>
@@ -77,7 +70,7 @@ const WalletHistory = ({ creditBalance, transactions }) => {
             </tbody>
           </table>
 
-          {transactions.length > 0 && (
+          {sortedTransactions.length > 0 && (
             <div className={styles.pagination}>
               <button 
                 className={styles.paginationButton} 
@@ -87,11 +80,11 @@ const WalletHistory = ({ creditBalance, transactions }) => {
                 Previous
               </button>
               <span className={styles.pageInfo}>
-                Page {walletPage} of {Math.ceil(transactions.length / 10)}
+                Page {walletPage} of {Math.ceil(sortedTransactions.length / 10)}
               </span>
               <button 
                 className={styles.paginationButton} 
-                disabled={walletPage === Math.ceil(transactions.length / 10)}
+                disabled={walletPage === Math.ceil(sortedTransactions.length / 10)}
                 onClick={() => setWalletPage(walletPage + 1)}
               >
                 Next
@@ -104,4 +97,4 @@ const WalletHistory = ({ creditBalance, transactions }) => {
   );
 };
 
-export default WalletHistory; 
+export default WalletHistory;

@@ -29,7 +29,8 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
     size: null,
     format: null
   });
-
+  const [showStreamKeyInfo, setShowStreamKeyInfo] = useState(false);
+  const [showSuccessSign, setShowSuccessSign] = useState(false);
   // Format file size in human-readable form
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -221,7 +222,7 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
       const transactionId = `stream_${Date.now()}`;
       const transactionsRef = doc(db, 'users', auth.currentUser.uid, 'wallets', transactionId);
       await setDoc(transactionsRef, {
-        amount: -totalCreditsNeeded,
+        quantity: -totalCreditsNeeded,
         type: 'debit',
         description: `Stream: ${newTask.title}`,
         timestamp: new Date(),
@@ -252,6 +253,13 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
       setUploadProgress(100);
 
       toast.success(`Stream started successfully! ${totalCreditsNeeded} credits used.`);
+      
+      // Show success sign and redirect to "Live History"
+      setShowSuccessSign(true);
+      setTimeout(() => {
+        setShowSuccessSign(false);
+        router.push('/dashboard?tab=live-history');
+      }, 2000);
     } catch (error) {
       console.error('Error creating task:', error);
       setUploadStatus('error');
@@ -268,6 +276,11 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
 
   return (
     <div>
+      {showSuccessSign && (
+        <div className={styles.successOverlay}>
+          <div className={styles.successSign}>✔</div>
+        </div>
+      )}
       <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Create New Live Stream</h2>
       <form onSubmit={handleCreateTask} className={styles.taskForm}>
         {/* File upload section */}
@@ -343,7 +356,17 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
 
         {/* Stream key input */}
         <div className={styles.formGroup}>
-          <label>Stream Key</label>
+        <label>
+            Stream Key&nbsp;
+            <button
+              type="button"
+              onClick={() => setShowStreamKeyInfo(true)}
+              className={styles.infoButton}
+              aria-label="Show stream key info"
+            >
+              ℹ️
+            </button>
+          </label>
           <input
             type="text"
             placeholder={isFileUploaded ? "Enter your YouTube Stream Key" : "Upload a video file first"}
@@ -357,7 +380,24 @@ const CreateLive = ({ creditBalance, setCreditBalance, tasks, setTasks }) => {
             You can find your stream key in your YouTube Studio dashboard under "Stream" settings
           </small>
         </div>
-
+        {showStreamKeyInfo && (
+          <div className={styles.infoModal}>
+            <div className={styles.infoContent}>
+              <button 
+                type="button" 
+                onClick={() => setShowStreamKeyInfo(false)} 
+                className={styles.closeButton}
+                aria-label="Close info"
+              >
+                ✖
+              </button>
+              <h3>How to find your Stream Key</h3>
+              <video controls src="/key_video.mp4" className={styles.infoVideo}>
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        )}
         {/* Loops and credits configuration */}
         <div className={styles.streamOptions}>
           <div className={styles.formGroup}>

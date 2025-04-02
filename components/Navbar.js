@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Logo from './Logo';
 import { useRouter } from 'next/router';

@@ -4,26 +4,16 @@ import styles from '../styles/Dashboard.module.css';
 const LiveHistory = ({ tasks }) => {
   const [activePage, setActivePage] = useState(1);
 
+  // Create a sorted copy of tasks with the most recent (by createdDate) first
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const timeA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+    const timeB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+    return timeB - timeA;
+  });
+
   return (
     <div>
       <h2 style={{ fontSize: '24px', color: '#1e293b', marginBottom: '24px' }}>Live Stream History</h2>
-      
-      <div className={styles.liveHistoryFilter}>
-        <select 
-          className={styles.historyFilterSelect}
-          onChange={(e) => {
-            // Filter handling logic here
-            console.log("Filter by:", e.target.value);
-          }}
-          defaultValue="all"
-        >
-          <option value="all">All Streams</option>
-          <option value="active">Active Streams</option>
-          <option value="scheduled">Scheduled Streams</option>
-          <option value="completed">Completed Streams</option>
-        </select>
-      </div>
-      
       <div className={styles.tableContainer}>
         <table className={`${styles.dataTable} ${styles.borderedTable}`}>
           <thead>
@@ -31,31 +21,23 @@ const LiveHistory = ({ tasks }) => {
               <th>Title</th>
               <th>Loops</th>
               <th>Stream Key</th>
-              <th>Status</th>
+             
               <th>Date</th>
             </tr>
           </thead>
           <tbody>
-            {tasks
+            {sortedTasks
               .slice((activePage - 1) * 10, activePage * 10)
               .map(task => (
                 <tr key={task.id}>
                   <td>{task.title}</td>
                   <td>{task.hours} loops</td>
                   <td>{task.streamKey}</td>
-                  <td>
-                    <span className={`${styles.statusBadge} ${
-                      task.status === 'active' ? styles.statusActive : 
-                      task.status === 'scheduled' ? styles.statusScheduled : 
-                      styles.statusCompleted
-                    }`}>
-                      {task.status}
-                    </span>
-                  </td>
+                 
                   <td>{task.createdDate ? new Date(task.createdDate).toLocaleString() : 'Just now'}</td>
                 </tr>
               ))}
-            {!tasks.length && (
+            {!sortedTasks.length && (
               <tr>
                 <td colSpan="5" className={styles.emptyMessage}>No streams found.</td>
               </tr>
@@ -63,7 +45,7 @@ const LiveHistory = ({ tasks }) => {
           </tbody>
         </table>
 
-        {tasks.length > 0 && (
+        {sortedTasks.length > 0 && (
           <div className={styles.pagination}>
             <button 
               className={styles.paginationButton} 
@@ -73,11 +55,11 @@ const LiveHistory = ({ tasks }) => {
               Previous
             </button>
             <span className={styles.pageInfo}>
-              Page {activePage} of {Math.ceil(tasks.length / 10)}
+              Page {activePage} of {Math.ceil(sortedTasks.length / 10)}
             </span>
             <button 
               className={styles.paginationButton} 
-              disabled={activePage === Math.ceil(tasks.length / 10)}
+              disabled={activePage === Math.ceil(sortedTasks.length / 10)}
               onClick={() => setActivePage(activePage + 1)}
             >
               Next
@@ -89,4 +71,4 @@ const LiveHistory = ({ tasks }) => {
   );
 };
 
-export default LiveHistory; 
+export default LiveHistory;
